@@ -57,6 +57,17 @@
     <button type="submit">Save Dealer</button>
   </form>
   <div id="dealerList"></div>
+<section>
+  <h2>Add a Customer</h2>
+  <form id="customerForm">
+    <input id="customerName" placeholder="Customer name" required>
+    <input id="customerPhone" placeholder="Customer phone number" required>
+    <input id="customerNotes" placeholder="Address or notes">
+    <button type="submit">Save Customer</button>
+  </form>
+  <div id="customerList"></div>
+</section>
+
 </section>
 
   </div>
@@ -211,6 +222,37 @@
       document.getElementById("dealerForm").reset();
       showMessage("Dealer saved successfully!");
     };
+    
+    document.getElementById("customerForm").onsubmit = async (event) => {
+      event.preventDefault();
+
+      const { data: { user }, error: userError } = await db.auth.getUser();
+
+      if (userError || !user) {
+        showMessage("Please sign in again.");
+        return;
+      }
+
+      const customer = {
+        owner_id: user.id,
+        name: document.getElementById("customerName").value.trim(),
+        phone: document.getElementById("customerPhone").value.trim(),
+        notes: document.getElementById("customerNotes").value.trim()
+      };
+
+      showMessage("Saving customer...");
+
+      const { error } = await db.from("shop_customers").insert(customer);
+
+      if (error) {
+        showMessage("Could not save customer: " + error.message);
+        return;
+      }
+
+      document.getElementById("customerForm").reset();
+      showMessage("Customer saved successfully!");
+    };
+
  </script>
 </body>
 </html>
