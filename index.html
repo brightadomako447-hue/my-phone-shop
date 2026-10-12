@@ -253,6 +253,72 @@
       showMessage("Customer saved successfully!");
     };
 
+    async function loadPeople() {
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) return;
+
+      const dealerList = document.getElementById("dealerList");
+      const customerList = document.getElementById("customerList");
+
+      const { data: dealers, error: dealerError } = await db
+        .from("shop_dealers")
+        .select("name, phone, notes")
+        .order("name");
+
+      if (dealerError) {
+        dealerList.textContent = "Could not load dealers.";
+      } else {
+        dealerList.replaceChildren();
+        const heading = document.createElement("h3");
+        heading.textContent = "Saved Dealers";
+        dealerList.appendChild(heading);
+
+        if (!dealers || dealers.length === 0) {
+          dealerList.append("No dealers saved yet.");
+        } else {
+          dealers.forEach((dealer) => {
+            const item = document.createElement("p");
+            item.textContent =
+              dealer.name + " — " + dealer.phone +
+              (dealer.notes ? " — " + dealer.notes : "");
+            dealerList.appendChild(item);
+          });
+        }
+      }
+
+      const { data: customers, error: customerError } = await db
+        .from("shop_customers")
+        .select("name, phone, notes")
+        .order("name");
+
+      if (customerError) {
+        customerList.textContent = "Could not load customers.";
+      } else {
+        customerList.replaceChildren();
+        const heading = document.createElement("h3");
+        heading.textContent = "Saved Customers";
+        customerList.appendChild(heading);
+
+        if (!customers || customers.length === 0) {
+          customerList.append("No customers saved yet.");
+        } else {
+          customers.forEach((customer) => {
+            const item = document.createElement("p");
+            item.textContent =
+              customer.name + " — " + customer.phone +
+              (customer.notes ? " — " + customer.notes : "");
+            customerList.appendChild(item);
+          });
+        }
+      }
+    }
+
+    db.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setTimeout(() => loadPeople(), 0);
+      }
+    });
+
  </script>
 </body>
 </html>
