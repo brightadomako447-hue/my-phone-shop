@@ -2,103 +2,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#14243a">
-  <title>My Phone Shop</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,sans-serif;background:#f3f5f9;color:#172033}
-    header{background:#14243a;color:white;padding:22px 18px}
-    header h1{margin:0;font-size:23px}
-    header p{margin:7px 0 0;color:#d4deed}
-    main{max-width:900px;margin:24px auto;padding:0 15px}
-    .card{background:white;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 3px 14px #15243a0c}
-    h2{margin-top:0;font-size:20px}
-    input,button{width:100%;padding:13px;margin:7px 0;border-radius:8px;font-size:16px}
-    input{border:1px solid #cbd3df}
-    button{border:0;background:#1769d2;color:white;font-weight:bold;cursor:pointer}
-    button.secondary{background:#e8eef7;color:#172033}
-    .nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-    .nav button{margin:0}
-    .muted{color:#68758a;font-size:14px;line-height:1.5}
-    #status{white-space:pre-wrap;overflow-wrap:anywhere}
-    .hidden{display:none}
-    .stat{background:#f3f6fb;border-radius:10px;padding:15px;margin:8px 0}
-    @media(min-width:600px){.nav{grid-template-columns:repeat(3,minmax(0,1fr))}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#14243a">
+<title>My Phone Shop</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f5f9;color:#172033}
+header{background:#14243a;color:white;padding:22px 18px}
+header h1{margin:0;font-size:24px}
+header p{color:#d4deed;margin-bottom:0}
+main{max-width:850px;margin:24px auto;padding:0 15px}
+.card{background:white;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 3px 14px #15243a0c}
+h2{margin-top:0;font-size:20px}
+input,button{width:100%;padding:13px;margin:7px 0;border-radius:8px;font-size:16px}
+input{border:1px solid #cbd3df}
+button{border:0;background:#1769d2;color:white;font-weight:bold;cursor:pointer}
+.secondary{background:#e8eef7;color:#172033}
+.muted{color:#68758a;font-size:14px;line-height:1.5}
+#status{white-space:pre-wrap;overflow-wrap:anywhere}
+.hidden{display:none!important}
+details{margin-top:15px;padding:12px;background:#f3f6fb;border-radius:8px}
+summary{cursor:pointer;color:#1769d2;font-weight:bold}
+.nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.nav button{margin:0}
+.stat{background:#f3f6fb;border-radius:10px;padding:15px;margin:8px 0}
+@media(min-width:600px){.nav{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
 </head>
 <body>
 <header>
-  <h1>My Phone Shop</h1>
-  <p>Inventory · Sales · Payments · Reports</p>
+<h1>My Phone Shop</h1>
+<p>Inventory · Sales · Payments · Reports</p>
 </header>
+
 <main>
-  <div id="login" class="card">
-    <h2>Sign in to continue</h2>
-    <p class="muted">Sign in with your existing shop account.</p>
-    <form id="loginForm">
-      <input id="email" type="email" placeholder="Email address" autocomplete="email" required>
-      <input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
-      <button type="submit">Sign in</button>
-    </form>
-<div id="resetRequest" class="hidden">
-  <h2>Reset your password</h2>
-  <p>Enter your account email. We will send you a reset link.</p>
-  <input id="resetEmail" type="email" placeholder="Your account email">
-  <button id="sendReset" type="button">Send reset email</button>
+<div id="login" class="card">
+<h2>Sign in to your shop</h2>
+<p class="muted">Use your existing shop account.</p>
+
+<form id="loginForm">
+<input id="email" type="email" placeholder="Email address" autocomplete="email" required>
+<input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+<button type="submit">Sign in</button>
+</form>
+
+<details>
+<summary>Forgot password?</summary>
+<p class="muted">Enter your account email. Supabase will send a password-reset link if the account exists.</p>
+<form id="resetForm">
+<input id="resetEmail" type="email" placeholder="Your account email" autocomplete="email" required>
+<button type="submit">Send reset email</button>
+</form>
+</details>
 </div>
 
-    <button id="forgot" class="secondary" type="button">Forgot password?</button>
-    <div id="resetRequest" class="hidden">
-      <h2>Reset your password</h2>
-      <p class="muted">Enter your account email. We will send a reset link.</p>
-      <input id="resetEmail" type="email" placeholder="Your account email" autocomplete="email">
-      <button id="sendReset" type="button">Send reset email</button>
-    </div>
-  </div>
+<div id="newPassword" class="card hidden">
+<h2>Choose a new password</h2>
+<p class="muted">Enter a new password of at least 8 characters.</p>
+<form id="newPasswordForm">
+<input id="newPass" type="password" placeholder="New password" autocomplete="new-password" minlength="8" required>
+<input id="confirmPass" type="password" placeholder="Confirm new password" autocomplete="new-password" minlength="8" required>
+<button type="submit">Save new password</button>
+</form>
+</div>
 
-  <div id="newPassword" class="card hidden">
-    <h2>Choose a new password</h2>
-    <p class="muted">Use at least 8 characters.</p>
-    <input id="newPass" type="password" placeholder="New password" autocomplete="new-password">
-    <input id="confirmPass" type="password" placeholder="Confirm new password" autocomplete="new-password">
-    <button id="savePassword" type="button">Save new password</button>
-  </div>
+<div id="dashboard" class="hidden">
+<div class="card">
+<h2>Shop dashboard</h2>
+<p class="muted">Currency: Ghana cedis (GHS).</p>
+<div class="stat"><strong>Phone stock</strong><br><span class="muted">Inventory will be tracked by unique IMEI.</span></div>
+<div class="stat"><strong>Sales and payments</strong><br><span class="muted">Record sales and outstanding balances.</span></div>
+<div class="stat"><strong>Dealers and customers</strong><br><span class="muted">Keep customer and dealer records.</span></div>
+</div>
+<div class="card">
+<h2>Shop management</h2>
+<div class="nav">
+<button type="button" data-section="Phone stock">Phone stock</button>
+<button type="button" data-section="Dealers">Dealers</button>
+<button type="button" data-section="Customers">Customers</button>
+<button type="button" data-section="Sales">Sales</button>
+<button type="button" data-section="Payments">Payments</button>
+<button type="button" data-section="Returns and exchanges">Returns / exchanges</button>
+<button type="button" data-section="Profit reports">Profit reports</button>
+<button type="button" data-section="Invoices">Invoices</button>
+</div>
+<p id="sectionStatus" class="muted">The management sections still need their database operations built and tested.</p>
+<button id="logout" class="secondary" type="button">Sign out</button>
+</div>
+</div>
 
-  <div id="dashboard" class="hidden">
-    <div class="card">
-      <h2>Shop dashboard</h2>
-      <p class="muted">Your shop workspace. Currency: Ghana cedis (GHS).</p>
-      <div class="stat">Phone stock<br><span class="muted">Track phones by unique IMEI.</span></div>
-      <div class="stat">Sales and payments<br><span class="muted">Record sales and payment balances.</span></div>
-      <div class="stat">Dealers and customers<br><span class="muted">Keep customer and dealer records.</span></div>
-    </div>
-    <div class="card">
-      <h2>Shop management</h2>
-      <div class="nav">
-        <button data-section="phones">Phone stock</button>
-        <button data-section="dealers">Dealers</button>
-        <button data-section="customers">Customers</button>
-        <button data-section="sales">Sales</button>
-        <button data-section="payments">Payments</button>
-        <button data-section="returns">Returns / exchanges</button>
-        <button data-section="reports">Profit reports</button>
-        <button data-section="invoices">Invoices</button>
-      </div>
-      <p id="sectionStatus" class="muted">Choose a section to begin.</p>
-    </div>
-    <div class="card">
-      <button id="logout" class="secondary" type="button">Sign out</button>
-    </div>
-  </div>
-  <div id="status" class="card muted" role="status" aria-live="polite"></div>
+<div id="status" class="card muted" role="status" aria-live="polite">Ready.</div>
 </main>
 
 <script>
 const SUPABASE_URL = "https://adogjxpztzhrwsuzyuvt.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03";
+const SUPABASE_PUBLISHABLE_KEY = sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03
 
 const client = window.supabase.createClient(
   SUPABASE_URL,
@@ -106,103 +106,114 @@ const client = window.supabase.createClient(
 );
 
 const $ = id => document.getElementById(id);
-const status = text => $("status").textContent = text;
+const status = message => { $("status").textContent = message; };
 
-function show(id) {
-  ["login","newPassword","dashboard"].forEach(name =>
-    $(name).classList.toggle("hidden", name !== id)
-  );
+function showPage(page) {
+  ["login","newPassword","dashboard"].forEach(id => {
+    $(id).classList.toggle("hidden", id !== page);
+  });
 }
 
-$("loginForm").addEventListener("submit", async e => {
-  e.preventDefault();
+$("loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
   status("Signing in…");
-  const { error } = await client.auth.signInWithPassword({
+
+  const {error} = await client.auth.signInWithPassword({
     email: $("email").value.trim(),
     password: $("password").value
   });
+
   if (error) {
     status("Sign-in failed: " + error.message);
     return;
   }
+
+  showPage("dashboard");
   status("Signed in successfully.");
-  show("dashboard");
 });
 
-$("forgot").addEventListener("click", () => {
-  const box = $("resetRequest");
-  box.classList.remove("hidden");
-  $("resetEmail").value = $("email").value.trim();
-  box.scrollIntoView({ behavior: "smooth", block: "center" });
-});
+$("resetForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  status("Sending password-reset email…");
 
-$("sendReset").addEventListener("click", async () => {
-  const email = $("resetEmail").value.trim();
-  if (!email) {
-    status("Enter your account email first.");
-    return;
+  const {error} = await client.auth.resetPasswordForEmail(
+    $("resetEmail").value.trim(),
+    {redirectTo: window.location.origin + window.location.pathname}
+  );
+
+  if (error) {
+    status("Could not send reset email: " + error.message);
+  } else {
+    status("If this email belongs to an account, a reset email should arrive. Open its link to return to this website.");
   }
-  status("Sending reset email…");
-  const { error } = await client.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + window.location.pathname
-  });
-  status(error
-    ? "Could not send reset email: " + error.message
-    : "If the address belongs to an account, a reset email should arrive. Open its link on this website.");
 });
 
-$("savePassword").addEventListener("click", async () => {
+$("newPasswordForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
   const password = $("newPass").value;
+
   if (password.length < 8) {
     status("Use at least 8 characters.");
     return;
   }
+
   if (password !== $("confirmPass").value) {
     status("The passwords do not match.");
     return;
   }
-  const { error } = await client.auth.updateUser({ password });
+
+  status("Updating password…");
+  const {error} = await client.auth.updateUser({password});
+
   if (error) {
     status("Password update failed: " + error.message);
     return;
   }
+
   await client.auth.signOut();
-  show("login");
-  status("Password updated. Sign in using your new password.");
+  showPage("login");
+  status("Password updated. Sign in with your new password.");
 });
 
 $("logout").addEventListener("click", async () => {
   await client.auth.signOut();
-  show("login");
+  showPage("login");
   status("You have signed out.");
 });
 
 document.querySelectorAll("[data-section]").forEach(button => {
   button.addEventListener("click", () => {
     $("sectionStatus").textContent =
-      button.textContent + " selected. Database operations still need to be connected and tested before this section can store shop records.";
+      button.dataset.section +
+      " selected. Database operations are not connected yet.";
   });
 });
 
 client.auth.onAuthStateChange((event, session) => {
   if (event === "PASSWORD_RECOVERY") {
-    show("newPassword");
-    status("Enter and save your new password below.");
+    showPage("newPassword");
+    status("Enter your new password below.");
   } else if (session) {
-    show("dashboard");
+    showPage("dashboard");
   } else if (event === "SIGNED_OUT") {
-    show("login");
+    showPage("login");
   }
 });
 
 (async () => {
-  const { data, error } = await client.auth.getSession();
+  const {data, error} = await client.auth.getSession();
+
   if (error) {
     status("Connection check failed: " + error.message);
     return;
   }
-  if (data.session) show("dashboard");
-  else show("login");
+
+  if (data.session) {
+    showPage("dashboard");
+  } else {
+    showPage("login");
+  }
 })();
 </script>
 </body>
