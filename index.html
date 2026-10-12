@@ -123,8 +123,10 @@ $("loginForm").addEventListener("submit", async e => {
 });
 
 $("forgot").addEventListener("click", () => {
-  $("resetRequest").classList.toggle("hidden");
+  const box = $("resetRequest");
+  box.classList.remove("hidden");
   $("resetEmail").value = $("email").value.trim();
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
 $("sendReset").addEventListener("click", async () => {
