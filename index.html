@@ -2,57 +2,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My Phone Shop</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:24px;color:#172033}
-main{max-width:420px;margin:40px auto;background:white;padding:24px;border-radius:16px;box-shadow:0 4px 20px #0001}
-input,button{box-sizing:border-box;width:100%;padding:13px;margin:8px 0;border-radius:8px;font-size:16px}
-input{border:1px solid #ccd2dc}
-button{border:0;background:#176b52;color:white;font-weight:bold}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14243a">
+  <title>My Phone Shop</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#f3f5f9;color:#172033}
+    header{background:#14243a;color:white;padding:22px 18px}
+    header h1{margin:0;font-size:23px}
+    header p{margin:7px 0 0;color:#d4deed}
+    main{max-width:900px;margin:24px auto;padding:0 15px}
+    .card{background:white;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 3px 14px #15243a0c}
+    h2{margin-top:0;font-size:20px}
+    input,button{width:100%;padding:13px;margin:7px 0;border-radius:8px;font-size:16px}
+    input{border:1px solid #cbd3df}
+    button{border:0;background:#1769d2;color:white;font-weight:bold;cursor:pointer}
+    button.secondary{background:#e8eef7;color:#172033}
+    .nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .nav button{margin:0}
+    .muted{color:#68758a;font-size:14px;line-height:1.5}
+    #status{white-space:pre-wrap;overflow-wrap:anywhere}
+    .hidden{display:none}
+    .stat{background:#f3f6fb;border-radius:10px;padding:15px;margin:8px 0}
+    @media(min-width:600px){.nav{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  </style>
 </head>
 <body>
+<header>
+  <h1>My Phone Shop</h1>
+  <p>Inventory · Sales · Payments · Reports</p>
+</header>
 <main>
-<h1>My Phone Shop</h1>
-<p>Sign in to manage your shop.</p>
-<form id="login">
-<input id="email" type="email" placeholder="Your account email" required>
-<input id="password" type="password" placeholder="Your password" required>
-<button type="submit">Sign in</button>
-</form>
-<p id="message">Please sign in to continue.</p>
-<button id="logout" hidden>Sign out</button>
+  <div id="login" class="card">
+    <h2>Sign in to continue</h2>
+    <p class="muted">Sign in with your existing shop account.</p>
+    <form id="loginForm">
+      <input id="email" type="email" placeholder="Email address" autocomplete="email" required>
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit">Sign in</button>
+    </form>
+    <button id="forgot" class="secondary" type="button">Forgot password?</button>
+    <div id="resetRequest" class="hidden">
+      <h2>Reset your password</h2>
+      <p class="muted">Enter your account email. We will send a reset link.</p>
+      <input id="resetEmail" type="email" placeholder="Your account email" autocomplete="email">
+      <button id="sendReset" type="button">Send reset email</button>
+    </div>
+  </div>
+
+  <div id="newPassword" class="card hidden">
+    <h2>Choose a new password</h2>
+    <p class="muted">Use at least 8 characters.</p>
+    <input id="newPass" type="password" placeholder="New password" autocomplete="new-password">
+    <input id="confirmPass" type="password" placeholder="Confirm new password" autocomplete="new-password">
+    <button id="savePassword" type="button">Save new password</button>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="card">
+      <h2>Shop dashboard</h2>
+      <p class="muted">Your shop workspace. Currency: Ghana cedis (GHS).</p>
+      <div class="stat">Phone stock<br><span class="muted">Track phones by unique IMEI.</span></div>
+      <div class="stat">Sales and payments<br><span class="muted">Record sales and payment balances.</span></div>
+      <div class="stat">Dealers and customers<br><span class="muted">Keep customer and dealer records.</span></div>
+    </div>
+    <div class="card">
+      <h2>Shop management</h2>
+      <div class="nav">
+        <button data-section="phones">Phone stock</button>
+        <button data-section="dealers">Dealers</button>
+        <button data-section="customers">Customers</button>
+        <button data-section="sales">Sales</button>
+        <button data-section="payments">Payments</button>
+        <button data-section="returns">Returns / exchanges</button>
+        <button data-section="reports">Profit reports</button>
+        <button data-section="invoices">Invoices</button>
+      </div>
+      <p id="sectionStatus" class="muted">Choose a section to begin.</p>
+    </div>
+    <div class="card">
+      <button id="logout" class="secondary" type="button">Sign out</button>
+    </div>
+  </div>
+  <div id="status" class="card muted" role="status" aria-live="polite"></div>
 </main>
+
 <script>
-const SUPABASE_URL="https://adogjxpztzhrwsuzyuvt.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY="sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03";
-const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const form=document.getElementById("login");
-const message=document.getElementById("message");
-const logout=document.getElementById("logout");
+const SUPABASE_URL = "https://adogjxpztzhrwsuzyuvt.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03";
 
-form.addEventListener("submit",async event=>{
-event.preventDefault();
-message.textContent="Signing in...";
-const {error}=await client.auth.signInWithPassword({
-email:document.getElementById("email").value.trim(),
-password:document.getElementById("password").value
-});
-if(error){message.textContent="Sign-in failed: "+error.message;return;}
-message.textContent="Signed in! Your shop dashboard is the next step.";
-form.hidden=true;
-logout.hidden=false;
+const client = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+const $ = id => document.getElementById(id);
+const status = text => $("status").textContent = text;
+
+function show(id) {
+  ["login","newPassword","dashboard"].forEach(name =>
+    $(name).classList.toggle("hidden", name !== id)
+  );
+}
+
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  status("Signing in…");
+  const { error } = await client.auth.signInWithPassword({
+    email: $("email").value.trim(),
+    password: $("password").value
+  });
+  if (error) {
+    status("Sign-in failed: " + error.message);
+    return;
+  }
+  status("Signed in successfully.");
+  show("dashboard");
 });
 
-logout.addEventListener("click",async()=>{
-await client.auth.signOut();
-form.hidden=false;
-logout.hidden=true;
-message.textContent="You have signed out.";
+$("forgot").addEventListener("click", () => {
+  $("resetRequest").classList.toggle("hidden");
+  $("resetEmail").value = $("email").value.trim();
 });
+
+$("sendReset").addEventListener("click", async () => {
+  const email = $("resetEmail").value.trim();
+  if (!email) {
+    status("Enter your account email first.");
+    return;
+  }
+  status("Sending reset email…");
+  const { error } = await client.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  status(error
+    ? "Could not send reset email: " + error.message
+    : "If the address belongs to an account, a reset email should arrive. Open its link on this website.");
+});
+
+$("savePassword").addEventListener("click", async () => {
+  const password = $("newPass").value;
+  if (password.length < 8) {
+    status("Use at least 8 characters.");
+    return;
+  }
+  if (password !== $("confirmPass").value) {
+    status("The passwords do not match.");
+    return;
+  }
+  const { error } = await client.auth.updateUser({ password });
+  if (error) {
+    status("Password update failed: " + error.message);
+    return;
+  }
+  await client.auth.signOut();
+  show("login");
+  status("Password updated. Sign in using your new password.");
+});
+
+$("logout").addEventListener("click", async () => {
+  await client.auth.signOut();
+  show("login");
+  status("You have signed out.");
+});
+
+document.querySelectorAll("[data-section]").forEach(button => {
+  button.addEventListener("click", () => {
+    $("sectionStatus").textContent =
+      button.textContent + " selected. Database operations still need to be connected and tested before this section can store shop records.";
+  });
+});
+
+client.auth.onAuthStateChange((event, session) => {
+  if (event === "PASSWORD_RECOVERY") {
+    show("newPassword");
+    status("Enter and save your new password below.");
+  } else if (session) {
+    show("dashboard");
+  } else if (event === "SIGNED_OUT") {
+    show("login");
+  }
+});
+
+(async () => {
+  const { data, error } = await client.auth.getSession();
+  if (error) {
+    status("Connection check failed: " + error.message);
+    return;
+  }
+  if (data.session) show("dashboard");
+  else show("login");
+})();
 </script>
 </body>
 </html>
