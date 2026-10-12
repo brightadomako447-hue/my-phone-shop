@@ -2,155 +2,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My Phone Shop</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body{font-family:Arial,sans-serif;background:#f2f5f9;color:#172033;margin:0}
-header{background:#14243a;color:white;padding:22px}
-main{max-width:600px;margin:24px auto;padding:0 14px}
-.card{background:white;border-radius:12px;padding:20px;margin-bottom:16px}
-input,button{box-sizing:border-box;width:100%;padding:13px;margin:7px 0;font-size:16px;border-radius:7px}
-input{border:1px solid #ccd3df}
-button{background:#1769d2;color:white;border:0;font-weight:bold}
-.secondary{background:#e8eef7;color:#172033}
-#status{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
-.hidden{display:none}
-summary{padding:12px;color:#1769d2;font-weight:bold}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Phone Shop</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 24px auto; padding: 16px; background: #f5f6f8; color: #222; }
+    h1 { color: #173b67; }
+    section { background: white; padding: 18px; border-radius: 12px; margin: 16px 0; }
+    input, button { box-sizing: border-box; width: 100%; padding: 12px; margin: 7px 0; font-size: 16px; }
+    button { background: #173b67; color: white; border: 0; border-radius: 7px; }
+    .phone { border-top: 1px solid #ddd; padding: 12px 0; overflow-wrap: anywhere; }
+    #message { white-space: pre-wrap; }
+  </style>
 </head>
 <body>
-<header>
-<h1>My Phone Shop</h1>
-<p>Private shop management</p>
-</header>
-<main>
-<div class="card" id="login">
-<h2>Sign in</h2>
-<form id="loginForm">
-<input id="email" type="email" placeholder="Account email" required>
-<input id="password" type="password" placeholder="Password" required>
-<button type="submit">Sign in</button>
-</form>
-<details>
-<summary>Forgot password?</summary>
-<form id="resetForm">
-<input id="resetEmail" type="email" placeholder="Account email" required>
-<button type="submit">Send reset email</button>
-</form>
-</details>
-</div>
+  <h1>My Phone Shop</h1>
+  <p>Phone stock · Ghana cedis (GHS)</p>
 
-<div class="card hidden" id="newPassword">
-<h2>Choose a new password</h2>
-<form id="newPasswordForm">
-<input id="newPass" type="password" placeholder="New password (8+ characters)" minlength="8" required>
-<input id="confirmPass" type="password" placeholder="Confirm new password" minlength="8" required>
-<button type="submit">Save new password</button>
-</form>
-</div>
+  <section id="login">
+    <h2>Sign in</h2>
+    <input id="email" type="email" placeholder="Your email address">
+    <input id="password" type="password" placeholder="Your password">
+    <button id="signIn">Sign in</button>
+  </section>
 
-<div class="card hidden" id="dashboard">
-<h2>You're signed in</h2>
-<p>My Phone Shop — Ghana cedis (GHS)</p>
-<p>Next we will connect phone stock, IMEI, dealers, customers, sales, payments, invoices, returns and profit reports.</p>
-<button id="logout" class="secondary" type="button">Sign out</button>
-</div>
+  <div id="app" hidden>
+    <section>
+      <h2>Add a phone</h2>
+      <form id="phoneForm">
+        <input id="imei" placeholder="15-digit IMEI" inputmode="numeric" maxlength="15" required>
+        <input id="brand" placeholder="Brand (e.g. Apple)" required>
+        <input id="model" placeholder="Model (e.g. iPhone 15)" required>
+        <input id="cost" type="number" min="0" step="0.01" placeholder="Purchase cost (GHS)" required>
+        <input id="price" type="number" min="0" step="0.01" placeholder="Selling price (GHS)" required>
+        <button type="submit">Save phone</button>
+      </form>
+    </section>
 
-<div class="card" id="status" role="status" aria-live="polite">Starting website…</div>
-</main>
-<script>
-(function(){
-const $ = id => document.getElementById(id);
-function status(message){$("status").textContent=message;}
-function show(page){
-["login","newPassword","dashboard"].forEach(id=>{
-$(id).classList.toggle("hidden",id!==page);
-});
-}
-window.addEventListener("error",e=>{
-status("WEBSITE ERROR: "+(e.message||"JavaScript failed to load."));
-});
-window.addEventListener("unhandledrejection",e=>{
-status("REQUEST ERROR: "+(e.reason?.message||String(e.reason||"Unknown error")));
-});
+    <section>
+      <h2>Search phone stock</h2>
+      <input id="search" placeholder="Search by IMEI, brand or model">
+      <button id="searchButton">Search</button>
+      <div id="stock"></div>
+    </section>
+    <button id="signOut">Sign out</button>
+  </div>
+  <p id="message"></p>
 
-try{
-if(!window.supabase){
-status("CONNECTION ERROR: Supabase library did not load. Check your internet connection and reload.");
-return;
-}
-const SUPABASE_URL="https://adogjxpztzhrwsuzyuvt.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY="sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03";
+  <script>
+    const SUPABASE_URL = "https://adogjxpztzhrwsuzyuvt.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03";
 
-if(SUPABASE_PUBLISHABLE_KEY==="PASTE_YOUR_PUBLISHABLE_KEY_HERE"){
-status("SETUP NEEDED: Replace the publishable-key placeholder in GitHub.");
-return;
-}
-const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+    const db = window.supabase.createClient(
+      SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY
+    );
+    const message = document.getElementById("message");
 
-$("loginForm").addEventListener("submit",async e=>{
-e.preventDefault();
-status("Signing in…");
-try{
-const {error}=await client.auth.signInWithPassword({
-email:$("email").value.trim(),
-password:$("password").value
-});
-if(error){status("SIGN-IN ERROR: "+error.message);return;}
-show("dashboard");status("Sign-in successful.");
-}catch(err){status("SIGN-IN REQUEST ERROR: "+err.message);}
-});
+    function showMessage(text) {
+      message.textContent = text;
+    }
 
-$("resetForm").addEventListener("submit",async e=>{
-e.preventDefault();
-status("Sending password-reset request…");
-try{
-const {error}=await client.auth.resetPasswordForEmail(
-$("resetEmail").value.trim(),
-{redirectTo:"https://brightadomako447-hue.github.io/my-phone-shop/"}
-);
-if(error){status("RESET ERROR: "+error.message);return;}
-status("REQUEST ACCEPTED. Check your inbox and spam folder for a reset email.");
-}catch(err){status("RESET REQUEST ERROR: "+err.message);}
-});
+    async function refreshPage() {
+      const { data: { session } } = await db.auth.getSession();
+      document.getElementById("login").hidden = !!session;
+      document.getElementById("app").hidden = !session;
+      if (session) await loadStock();
+    }
 
-$("newPasswordForm").addEventListener("submit",async e=>{
-e.preventDefault();
-if($("newPass").value!==$("confirmPass").value){
-status("The passwords do not match.");return;
-}
-status("Updating password…");
-try{
-const {error}=await client.auth.updateUser({password:$("newPass").value});
-if(error){status("PASSWORD UPDATE ERROR: "+error.message);return;}
-await client.auth.signOut();
-show("login");status("Password updated. Sign in with your new password.");
-}catch(err){status("PASSWORD UPDATE ERROR: "+err.message);}
-});
+    document.getElementById("signIn").onclick = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      showMessage("Signing in...");
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      if (error) return showMessage("Sign-in failed: " + error.message);
+      showMessage("Signed in.");
+      await refreshPage();
+    };
 
-$("logout").addEventListener("click",async()=>{
-await client.auth.signOut();
-show("login");status("Signed out.");
-});
+    document.getElementById("signOut").onclick = async () => {
+      await db.auth.signOut();
+      document.getElementById("stock").replaceChildren();
+      showMessage("Signed out.");
+      await refreshPage();
+    };
 
-client.auth.onAuthStateChange((event,session)=>{
-if(event==="PASSWORD_RECOVERY"){show("newPassword");status("Enter your new password.");}
-else if(session){show("dashboard");}
-else if(event==="SIGNED_OUT"){show("login");}
-});
+    document.getElementById("phoneForm").onsubmit = async (event) => {
+      event.preventDefault();
+      const imei = document.getElementById("imei").value.trim();
+      if (!/^\d{15}$/.test(imei)) {
+        return showMessage("Please enter a 15-digit IMEI.");
+      }
 
-client.auth.getSession().then(({data,error})=>{
-if(error){status("SESSION CHECK ERROR: "+error.message);return;}
-if(data.session){show("dashboard");status("Signed in.");}
-else{show("login");status("Ready. Sign in or choose Forgot password?.");}
-}).catch(err=>status("STARTUP ERROR: "+err.message));
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) return showMessage("Please sign in again.");
 
-}catch(err){
-status("STARTUP ERROR: "+err.message);
-}
-})();
-</script>
+      const phone = {
+        owner_id: user.id,
+        imei,
+        brand: document.getElementById("brand").value.trim(),
+        model: document.getElementById("model").value.trim(),
+        purchase_cost: Number(document.getElementById("cost").value),
+        selling_price: Number(document.getElementById("price").value),
+        status: "in_stock"
+      };
+
+      showMessage("Saving phone...");
+      const { error } = await db.from("shop_phones").insert(phone);
+      if (error) return showMessage("Could not save: " + error.message);
+
+      event.target.reset();
+      showMessage("Phone saved successfully.");
+      await loadStock();
+    };
+
+    async function loadStock() {
+      const term = document.getElementById("search").value.trim();
+      let query = db.from("shop_phones")
+        .select("imei,brand,model,purchase_cost,selling_price,status,created_at")
+        .order("created_at", { ascending: false });
+
+      if (term) {
+        const safeTerm = term.replace(/[,%()]/g, "");
+        query = query.or(
+          "imei.ilike.%" + safeTerm + "%," +
+          "brand.ilike.%" + safeTerm + "%," +
+          "model.ilike.%" + safeTerm + "%"
+        );
+      }
+
+      const { data, error } = await query;
+      const stock = document.getElementById("stock");
+      stock.replaceChildren();
+
+      if (error) {
+        showMessage("Could not load stock: " + error.message);
+        return;
+      }
+      if (!data.length) {
+        stock.textContent = "No phones found.";
+        return;
+      }
+
+      data.forEach(phone => {
+        const item = document.createElement("div");
+        item.className = "phone";
+        item.textContent =
+          phone.brand + " " + phone.model +
+          "\nIMEI: " + phone.imei +
+          "\nPurchase: GHS " + Number(phone.purchase_cost).toFixed(2) +
+          "\nSelling: GHS " + Number(phone.selling_price).toFixed(2) +
+          "\nStatus: " + phone.status;
+        stock.appendChild(item);
+      });
+      showMessage("Stock loaded: " + data.length + " phone(s).");
+    }
+
+    document.getElementById("searchButton").onclick = loadStock;
+    document.getElementById("search").onkeydown = event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        loadStock();
+      }
+    };
+
+    db.auth.onAuthStateChange(() => {
+      setTimeout(refreshPage, 0);
+    });
+    refreshPage();
+  </script>
 </body>
 </html>
