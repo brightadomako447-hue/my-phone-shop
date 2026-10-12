@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Phone Shop</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#f1f5f9;margin:0;padding:24px;color:#172033}
+main{max-width:420px;margin:40px auto;background:white;padding:24px;border-radius:16px;box-shadow:0 4px 20px #0001}
+input,button{box-sizing:border-box;width:100%;padding:13px;margin:8px 0;border-radius:8px;font-size:16px}
+input{border:1px solid #ccd2dc}
+button{border:0;background:#176b52;color:white;font-weight:bold}
+</style>
+</head>
+<body>
+<main>
+<h1>My Phone Shop</h1>
+<p>Sign in to manage your shop.</p>
+<form id="login">
+<input id="email" type="email" placeholder="Your account email" required>
+<input id="password" type="password" placeholder="Your password" required>
+<button type="submit">Sign in</button>
+</form>
+<p id="message">Please sign in to continue.</p>
+<button id="logout" hidden>Sign out</button>
+</main>
+<script>
+const SUPABASE_URL="https://adogjxpztzhrwsuzyuvt.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const form=document.getElementById("login");
+const message=document.getElementById("message");
+const logout=document.getElementById("logout");
+
+form.addEventListener("submit",async event=>{
+event.preventDefault();
+message.textContent="Signing in...";
+const {error}=await client.auth.signInWithPassword({
+email:document.getElementById("email").value.trim(),
+password:document.getElementById("password").value
+});
+if(error){message.textContent="Sign-in failed: "+error.message;return;}
+message.textContent="Signed in! Your shop dashboard is the next step.";
+form.hidden=true;
+logout.hidden=false;
+});
+
+logout.addEventListener("click",async()=>{
+await client.auth.signOut();
+form.hidden=false;
+logout.hidden=true;
+message.textContent="You have signed out.";
+});
+</script>
+</body>
+</html>
