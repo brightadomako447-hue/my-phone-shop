@@ -132,7 +132,35 @@ $("loginForm").addEventListener("submit", async event => {
   status("Signed in successfully.");
 });
 
+
 $("resetForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const email = $("resetEmail").value.trim();
+
+  if (!email) {
+    status("Please enter your account email.");
+    return;
+  }
+
+  status("Sending reset request…");
+
+  try {
+    const result = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://brightadomako447-hue.github.io/my-phone-shop/"
+    });
+
+    if (result.error) {
+      status("RESET ERROR: " + result.error.message);
+      return;
+    }
+
+    status("REQUEST SENT. Check your email inbox and spam folder for the reset link.");
+  } catch (error) {
+    status("CONNECTION ERROR: " + error.message);
+  }
+});
+
   event.preventDefault();
   status("Sending password-reset email…");
 
