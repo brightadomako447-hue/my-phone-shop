@@ -318,6 +318,58 @@
         setTimeout(() => loadPeople(), 0);
       }
     });
+    document.getElementById("saleForm").onsubmit = async (event) => {
+      event.preventDefault();
+
+      const { data: { user }, error: userError } = await db.auth.getUser();
+
+      if (userError || !user) {
+        document.getElementById("saleMessage").textContent =
+          "Please sign in again.";
+        return;
+      }
+
+      const imei = document.getElementById("saleImei").value.trim();
+      const buyerType = document.getElementById("buyerType").value;
+      const buyerName = document.getElementById("buyerName").value.trim();
+      const salePrice = Number(document.getElementById("salePrice").value);
+      const amountPaid = Number(document.getElementById("amountPaid").value);
+      const saleDate = document.getElementById("saleDate").value;
+      const notes = document.getElementById("saleNotes").value.trim();
+
+      const message = document.getElementById("saleMessage");
+
+      if (amountPaid > salePrice) {
+        message.textContent =
+          "Amount paid cannot be greater than the selling price.";
+        return;
+      }
+
+      const sale = {
+        owner_id: user.id,
+        imei: imei,
+        buyer_type: buyerType,
+        buyer_name: buyerName,
+        sale_price: salePrice,
+        amount_paid: amountPaid,
+        sale_date: saleDate,
+        notes: notes
+      };
+
+      message.textContent = "Saving sale...";
+
+      const { error } = await db.from("shop_sales").insert(sale);
+
+      if (error) {
+        message.textContent = "Could not save sale: " + error.message;
+        return;
+      }
+
+      document.getElementById("saleForm").reset();
+      message.textContent =
+        "Sale saved successfully! Balance due: GHS " +
+        (salePrice - amountPaid).toFixed(2);
+    };
 </script>
 </body>
 </html>
