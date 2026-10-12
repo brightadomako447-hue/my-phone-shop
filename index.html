@@ -47,6 +47,18 @@
       <div id="stock"></div>
     </section>
     <button id="signOut">Sign out</button>
+    
+<section>
+  <h2>Add a Dealer</h2>
+  <form id="dealerForm">
+    <input id="dealerName" placeholder="Dealer name" required>
+    <input id="dealerPhone" placeholder="Dealer phone number" required>
+    <input id="dealerNotes" placeholder="Address or notes">
+    <button type="submit">Save Dealer</button>
+  </form>
+  <div id="dealerList"></div>
+</section>
+
   </div>
   <p id="message"></p>
 
@@ -170,6 +182,36 @@
       setTimeout(refreshPage, 0);
     });
     refreshPage();
+    
+    document.getElementById("dealerForm").onsubmit = async (event) => {
+      event.preventDefault();
+
+      const { data: { user }, error: userError } = await db.auth.getUser();
+      if (userError || !user) {
+        showMessage("Please sign in again.");
+        return;
+      }
+
+      const dealer = {
+        owner_id: user.id,
+        name: document.getElementById("dealerName").value.trim(),
+        phone: document.getElementById("dealerPhone").value.trim(),
+        notes: document.getElementById("dealerNotes").value.trim()
+      };
+
+      showMessage("Saving dealer...");
+
+      const { error } = await db.from("shop_dealers").insert(dealer);
+
+      if (error) {
+        showMessage("Could not save dealer: " + error.message);
+        return;
+      }
+
+      document.getElementById("dealerForm").reset();
+      showMessage("Dealer saved successfully!");
+    };
+
   </script>
 </body>
 </html>
