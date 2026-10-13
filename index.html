@@ -395,9 +395,46 @@
         return;
       }
 
+      
+    document.getElementById("saleForm").onsubmit = async (event) => {
+      event.preventDefault();
+
+      const message = document.getElementById("saleMessage");
+      const { data: { user }, error: userError } = await db.auth.getUser();
+
+      if (userError || !user) {
+        message.textContent = "Please sign in again.";
+        return;
+      }
+
+      const imei = document.getElementById("saleImei").value.trim();
+      const buyerType = document.getElementById("buyerType").value;
+      const buyerName = document.getElementById("buyerName").value.trim();
+      const salePrice = Number(document.getElementById("salePrice").value);
+      const amountPaid = Number(document.getElementById("amountPaid").value);
+      const saleDate = document.getElementById("saleDate").value;
+      const notes = document.getElementById("saleNotes").value.trim();
+
+      message.textContent = "Recording sale...";
+
+      const { error } = await db.rpc("record_shop_sale", {
+        p_imei: imei,
+        p_buyer_type: buyerType,
+        p_buyer_name: buyerName,
+        p_sale_price: salePrice,
+        p_amount_paid: amountPaid,
+        p_sale_date: saleDate,
+        p_notes: notes || null
+      });
+
+      if (error) {
+        message.textContent = "Could not record sale: " + error.message;
+        return;
+      }
+
       document.getElementById("saleForm").reset();
       message.textContent =
-        "Sale saved successfully! Balance due: GHS " +
+        "Sale saved! Phone marked as sold. Balance due: GHS " +
         (salePrice - amountPaid).toFixed(2);
     };
 </script>
