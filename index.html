@@ -17,7 +17,9 @@
     .phone { border-top: 1px solid #ddd; padding: 12px 0; overflow-wrap: anywhere; }
     #message, #saleMessage, #scannerMessage { white-space: pre-wrap; }
     #scannerPanel { display: none; background: #eef3f8; border-radius: 10px; padding: 12px; margin: 8px 0; }
-    #reader { width: 100%; }
+    #reader { width: 100%; min-height: 260px; }
+    #reader video { width: 100% !important; height: auto !important; max-height: 62vh; object-fit: cover; border-radius: 8px; }
+    #scannerPanel { scroll-margin-top: 16px; }
     .hint { color: #555; font-size: 14px; }
   </style>
 </head>
@@ -193,6 +195,7 @@
       await stopScanner();
       scanTarget = targetId;
       scannerPanel.style.display = "block";
+      scannerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       scannerMessage.textContent = "Starting camera...";
       scannerStarting = true;
       try {
