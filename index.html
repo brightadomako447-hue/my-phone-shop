@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,41 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>My Phone Shop</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 24px auto;
-      padding: 16px;
-      background: #f5f6f8;
-      color: #222;
-    }
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 24px auto; padding: 16px; background: #f5f6f8; color: #222; }
     h1 { color: #173b67; }
-    section {
-      background: white;
-      padding: 18px;
-      border-radius: 12px;
-      margin: 16px 0;
-    }
-    input, button, select {
-      box-sizing: border-box;
-      width: 100%;
-      padding: 12px;
-      margin: 7px 0;
-      font-size: 16px;
-    }
-    button {
-      background: #173b67;
-      color: white;
-      border: 0;
-      border-radius: 7px;
-    }
-    .phone {
-      border-top: 1px solid #ddd;
-      padding: 12px 0;
-      overflow-wrap: anywhere;
-    }
-    #message, #saleMessage { white-space: pre-wrap; }
+    section { background: white; padding: 18px; border-radius: 12px; margin: 16px 0; }
+    input, button, select { box-sizing: border-box; width: 100%; padding: 12px; margin: 7px 0; font-size: 16px; }
+    button { background: #173b67; color: white; border: 0; border-radius: 7px; }
+    button:disabled { opacity: .6; }
+    .secondary { background: #536579; }
+    .phone { border-top: 1px solid #ddd; padding: 12px 0; overflow-wrap: anywhere; }
+    #message, #saleMessage, #scannerMessage { white-space: pre-wrap; }
+    #scannerPanel { display: none; background: #eef3f8; border-radius: 10px; padding: 12px; margin: 8px 0; }
+    #reader { width: 100%; }
+    .hint { color: #555; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -50,10 +28,8 @@
   <section id="login">
     <h2>Sign in</h2>
     <form id="loginForm">
-      <input id="email" type="email"
-        placeholder="Your email address" required>
-      <input id="password" type="password"
-        placeholder="Your password" required>
+      <input id="email" type="email" placeholder="Your email address" required>
+      <input id="password" type="password" placeholder="Your password" required>
       <button id="signIn" type="submit">Sign in</button>
     </form>
   </section>
@@ -62,23 +38,21 @@
     <section>
       <h2>Add a phone</h2>
       <form id="phoneForm">
-        <input id="imei" placeholder="15-digit IMEI"
-          inputmode="numeric" maxlength="15" required>
+        <input id="imei" placeholder="15-digit IMEI" inputmode="numeric" maxlength="15" required>
+        <button class="secondary" id="scanPhoneImei" type="button">Scan IMEI with camera</button>
         <input id="brand" placeholder="Brand (e.g. Apple)" required>
         <input id="model" placeholder="Model (e.g. iPhone 15)" required>
-        <input id="cost" type="number" min="0" step="0.01"
-          placeholder="Purchase cost (GHS)" required>
-        <input id="price" type="number" min="0" step="0.01"
-          placeholder="Selling price (GHS)" required>
+        <input id="cost" type="number" min="0" step="0.01" placeholder="Purchase cost (GHS)" required>
+        <input id="price" type="number" min="0" step="0.01" placeholder="Selling price (GHS)" required>
         <button type="submit">Save phone</button>
       </form>
+      <p class="hint">You can also type the IMEI manually if there is no barcode.</p>
     </section>
 
     <section>
       <h2>Search phone stock</h2>
       <form id="searchForm">
-        <input id="search"
-          placeholder="Search by IMEI, brand or model">
+        <input id="search" placeholder="Search by IMEI, brand or model">
         <button type="submit">Search</button>
       </form>
       <div id="stock"></div>
@@ -109,23 +83,16 @@
     <section>
       <h2>Record a Sale</h2>
       <form id="saleForm">
-        <input id="saleImei" placeholder="Phone IMEI" required>
-
+        <input id="saleImei" placeholder="Phone IMEI" inputmode="numeric" maxlength="15" required>
+        <button class="secondary" id="scanSaleImei" type="button">Scan IMEI with camera</button>
         <label for="buyerType">Buyer type</label>
         <select id="buyerType" required>
           <option value="Dealer">Dealer</option>
           <option value="Customer">Customer</option>
         </select>
-
-        <input id="buyerName"
-          placeholder="Dealer or customer name" required>
-
-        <input id="salePrice" type="number" min="0" step="0.01"
-          placeholder="Selling price (GHS)" required>
-
-        <input id="amountPaid" type="number" min="0" step="0.01"
-          placeholder="Amount paid (GHS)" required>
-
+        <input id="buyerName" placeholder="Dealer or customer name" required>
+        <input id="salePrice" type="number" min="0" step="0.01" placeholder="Selling price (GHS)" required>
+        <input id="amountPaid" type="number" min="0" step="0.01" placeholder="Amount paid (GHS)" required>
         <input id="saleDate" type="date" required>
         <input id="saleNotes" placeholder="Notes (optional)">
         <button type="submit">Save Sale</button>
@@ -134,47 +101,42 @@
       <div id="salesList"></div>
     </section>
 
+    <section id="scannerPanel">
+      <h2>Scan IMEI barcode</h2>
+      <p class="hint">Allow camera access and point the camera at the barcode. If asked, use the rear camera.</p>
+      <div id="reader"></div>
+      <p id="scannerMessage" role="status" aria-live="polite"></p>
+      <button class="secondary" id="stopScanner" type="button">Close scanner</button>
+    </section>
+
     <button id="signOut" type="button">Sign out</button>
   </div>
 
   <p id="message" role="status" aria-live="polite"></p>
 
   <script>
-    const SUPABASE_URL =
-      "https://adogjxpztzhrwsuzyuvt.supabase.co";
-
-    const SUPABASE_PUBLISHABLE_KEY =
-      "sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03";
-
-    const db = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
+    const SUPABASE_URL = "https://adogjxpztzhrwsuzyuvt.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
     const message = document.getElementById("message");
     const saleMessage = document.getElementById("saleMessage");
+    const scannerPanel = document.getElementById("scannerPanel");
+    const scannerMessage = document.getElementById("scannerMessage");
+    let html5QrCode = null;
+    let scanTarget = null;
+    let scannerStarting = false;
 
-    function showMessage(text) {
-      message.textContent = text;
-    }
-
-    function money(value) {
-      return Number(value || 0).toFixed(2);
-    }
+    function showMessage(text) { message.textContent = text; }
+    function money(value) { return Number(value || 0).toFixed(2); }
 
     async function refreshPage() {
       try {
         const { data, error } = await db.auth.getSession();
-
-        if (error) {
-          showMessage("Could not check sign-in: " + error.message);
-          return;
-        }
-
+        if (error) { showMessage("Could not check sign-in: " + error.message); return; }
         const signedIn = !!data.session;
         document.getElementById("login").hidden = signedIn;
         document.getElementById("app").hidden = !signedIn;
-
         if (signedIn) {
           await loadStock();
           await loadPeople();
@@ -187,25 +149,14 @@
 
     document.getElementById("loginForm").onsubmit = async (event) => {
       event.preventDefault();
-
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
       const button = document.getElementById("signIn");
-
       button.disabled = true;
       showMessage("Signing in...");
-
       try {
-        const { error } = await db.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) {
-          showMessage("Sign-in failed: " + error.message);
-          return;
-        }
-
+        const { error } = await db.auth.signInWithPassword({ email, password });
+        if (error) { showMessage("Sign-in failed: " + error.message); return; }
         showMessage("Signed in successfully.");
         await refreshPage();
       } catch (error) {
@@ -216,378 +167,278 @@
     };
 
     document.getElementById("signOut").onclick = async () => {
+      await stopScanner();
       showMessage("Signing out...");
-
       const { error } = await db.auth.signOut();
-
-      if (error) {
-        showMessage("Could not sign out: " + error.message);
-        return;
-      }
-
+      if (error) { showMessage("Could not sign out: " + error.message); return; }
       document.getElementById("stock").replaceChildren();
       document.getElementById("dealerList").replaceChildren();
       document.getElementById("customerList").replaceChildren();
       document.getElementById("salesList").replaceChildren();
       saleMessage.textContent = "";
-
       showMessage("Signed out.");
       await refreshPage();
     };
 
-    document.getElementById("phoneForm").onsubmit =
-      async (event) => {
-        event.preventDefault();
-
-        const imei = document.getElementById("imei").value.trim();
-
-        if (!/^\d{15}$/.test(imei)) {
-          showMessage("Please enter a 15-digit IMEI.");
-          return;
+    async function startScanner(targetId) {
+      if (scannerStarting) return;
+      if (typeof Html5Qrcode === "undefined") {
+        showMessage("Scanner library did not load. Check your internet connection and reload the page.");
+        return;
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showMessage("Camera scanning needs a secure browser connection. Open the website using its https:// address in Safari.");
+        return;
+      }
+      await stopScanner();
+      scanTarget = targetId;
+      scannerPanel.style.display = "block";
+      scannerMessage.textContent = "Starting camera...";
+      scannerStarting = true;
+      try {
+        html5QrCode = new Html5Qrcode("reader");
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 140 } },
+          async (decodedText) => {
+            const digits = decodedText.replace(/\D/g, "");
+            if (digits.length !== 15) {
+              scannerMessage.textContent = "Barcode read, but it did not contain exactly 15 digits. Try another barcode or enter the IMEI manually.";
+              return;
+            }
+            document.getElementById(scanTarget).value = digits;
+            scannerMessage.textContent = "IMEI scanned. Please check the 15 digits before saving.";
+            await stopScanner();
+            showMessage("IMEI scanned. Please verify it before saving.");
+          },
+          () => {}
+        );
+        scannerMessage.textContent = "Camera ready. Hold the barcode steady inside the box.";
+      } catch (error) {
+        scannerMessage.textContent = "Could not start camera: " + (error.message || error) + ". Allow camera access in Safari settings, then try again.";
+        if (html5QrCode) {
+          try { await html5QrCode.clear(); } catch (_) {}
+          html5QrCode = null;
         }
+      } finally {
+        scannerStarting = false;
+      }
+    }
 
-        const { data: { user }, error: userError } =
-          await db.auth.getUser();
+    async function stopScanner() {
+      if (html5QrCode) {
+        try {
+          if (html5QrCode.isScanning) await html5QrCode.stop();
+        } catch (_) {}
+        try { await html5QrCode.clear(); } catch (_) {}
+        html5QrCode = null;
+      }
+      scannerPanel.style.display = "none";
+      scannerMessage.textContent = "";
+      scannerStarting = false;
+    }
 
-        if (userError || !user) {
-          showMessage("Please sign in again.");
-          return;
-        }
+    document.getElementById("scanPhoneImei").onclick = () => startScanner("imei");
+    document.getElementById("scanSaleImei").onclick = () => startScanner("saleImei");
+    document.getElementById("stopScanner").onclick = stopScanner;
 
-        const phone = {
-          owner_id: user.id,
-          imei,
-          brand: document.getElementById("brand").value.trim(),
-          model: document.getElementById("model").value.trim(),
-          purchase_cost: Number(
-            document.getElementById("cost").value
-          ),
-          selling_price: Number(
-            document.getElementById("price").value
-          ),
-          status: "in_stock"
-        };
+    document.getElementById("phoneForm").onsubmit = async (event) => {
+      event.preventDefault();
+      const imei = document.getElementById("imei").value.trim();
+      if (!/^\d{15}$/.test(imei)) { showMessage("Please enter or scan a 15-digit IMEI."); return; }
+      const { data: { user }, error: userError } = await db.auth.getUser();
+      if (userError || !user) { showMessage("Please sign in again."); return; }
 
-        showMessage("Saving phone...");
-
-        const { error } = await db
-          .from("shop_phones")
-          .insert(phone);
-
-        if (error) {
-          showMessage("Could not save phone: " + error.message);
-          return;
-        }
-
-        event.target.reset();
-        showMessage("Phone saved successfully.");
-        await loadStock();
+      const phone = {
+        owner_id: user.id,
+        imei,
+        brand: document.getElementById("brand").value.trim(),
+        model: document.getElementById("model").value.trim(),
+        purchase_cost: Number(document.getElementById("cost").value),
+        selling_price: Number(document.getElementById("price").value),
+        status: "in_stock"
       };
+
+      showMessage("Checking IMEI...");
+      const { data: existing, error: checkError } = await db
+        .from("shop_phones").select("imei").eq("imei", imei).maybeSingle();
+      if (checkError) { showMessage("Could not check IMEI: " + checkError.message); return; }
+      if (existing) { showMessage("This IMEI is already registered. Search stock instead of adding it again."); return; }
+
+      showMessage("Saving phone...");
+      const { error } = await db.from("shop_phones").insert(phone);
+      if (error) { showMessage("Could not save phone: " + error.message); return; }
+      event.target.reset();
+      showMessage("Phone saved successfully.");
+      await loadStock();
+    };
 
     async function loadStock() {
       const term = document.getElementById("search").value.trim();
       const stock = document.getElementById("stock");
-
       let query = db.from("shop_phones")
-        .select(
-          "imei,brand,model,purchase_cost,selling_price,status,created_at"
-        )
+        .select("imei,brand,model,purchase_cost,selling_price,status,created_at")
         .order("created_at", { ascending: false });
-
       if (term) {
         const safeTerm = term.replace(/[,%()]/g, "");
-        query = query.or(
-          "imei.ilike.%" + safeTerm + "%," +
-          "brand.ilike.%" + safeTerm + "%," +
-          "model.ilike.%" + safeTerm + "%"
-        );
+        query = query.or("imei.ilike.%" + safeTerm + "%,brand.ilike.%" + safeTerm + "%,model.ilike.%" + safeTerm + "%");
       }
-
       const { data, error } = await query;
       stock.replaceChildren();
-
-      if (error) {
-        showMessage("Could not load stock: " + error.message);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        stock.textContent = "No phones found.";
-        return;
-      }
-
+      if (error) { showMessage("Could not load stock: " + error.message); return; }
+      if (!data || data.length === 0) { stock.textContent = "No phones found."; return; }
       data.forEach((phone) => {
         const item = document.createElement("div");
         item.className = "phone";
-        item.textContent =
-          phone.brand + " " + phone.model +
+        item.textContent = phone.brand + " " + phone.model +
           "\nIMEI: " + phone.imei +
           "\nPurchase: GHS " + money(phone.purchase_cost) +
           "\nSelling: GHS " + money(phone.selling_price) +
           "\nStatus: " + phone.status;
         stock.appendChild(item);
       });
-
       showMessage("Stock loaded: " + data.length + " phone(s).");
     }
 
-    document.getElementById("searchForm").onsubmit =
-      async (event) => {
-        event.preventDefault();
-        await loadStock();
+    document.getElementById("searchForm").onsubmit = async (event) => {
+      event.preventDefault();
+      await loadStock();
+    };
+
+    document.getElementById("dealerForm").onsubmit = async (event) => {
+      event.preventDefault();
+      const { data: { user }, error: userError } = await db.auth.getUser();
+      if (userError || !user) { showMessage("Please sign in again."); return; }
+      const dealer = {
+        owner_id: user.id,
+        name: document.getElementById("dealerName").value.trim(),
+        phone: document.getElementById("dealerPhone").value.trim(),
+        notes: document.getElementById("dealerNotes").value.trim()
       };
+      showMessage("Saving dealer...");
+      const { error } = await db.from("shop_dealers").insert(dealer);
+      if (error) { showMessage("Could not save dealer: " + error.message); return; }
+      event.target.reset();
+      showMessage("Dealer saved successfully.");
+      await loadPeople();
+    };
 
-    document.getElementById("dealerForm").onsubmit =
-      async (event) => {
-        event.preventDefault();
-
-        const { data: { user }, error: userError } =
-          await db.auth.getUser();
-
-        if (userError || !user) {
-          showMessage("Please sign in again.");
-          return;
-        }
-
-        const dealer = {
-          owner_id: user.id,
-          name: document.getElementById("dealerName").value.trim(),
-          phone: document.getElementById("dealerPhone").value.trim(),
-          notes: document.getElementById("dealerNotes").value.trim()
-        };
-
-        showMessage("Saving dealer...");
-
-        const { error } = await db
-          .from("shop_dealers")
-          .insert(dealer);
-
-        if (error) {
-          showMessage("Could not save dealer: " + error.message);
-          return;
-        }
-
-        event.target.reset();
-        showMessage("Dealer saved successfully.");
-        await loadPeople();
+    document.getElementById("customerForm").onsubmit = async (event) => {
+      event.preventDefault();
+      const { data: { user }, error: userError } = await db.auth.getUser();
+      if (userError || !user) { showMessage("Please sign in again."); return; }
+      const customer = {
+        owner_id: user.id,
+        name: document.getElementById("customerName").value.trim(),
+        phone: document.getElementById("customerPhone").value.trim(),
+        notes: document.getElementById("customerNotes").value.trim()
       };
-
-    document.getElementById("customerForm").onsubmit =
-      async (event) => {
-        event.preventDefault();
-
-        const { data: { user }, error: userError } =
-          await db.auth.getUser();
-
-        if (userError || !user) {
-          showMessage("Please sign in again.");
-          return;
-        }
-
-        const customer = {
-          owner_id: user.id,
-          name: document.getElementById("customerName").value.trim(),
-          phone: document.getElementById("customerPhone").value.trim(),
-          notes: document.getElementById("customerNotes").value.trim()
-        };
-
-        showMessage("Saving customer...");
-
-        const { error } = await db
-          .from("shop_customers")
-          .insert(customer);
-
-        if (error) {
-          showMessage("Could not save customer: " + error.message);
-          return;
-        }
-
-        event.target.reset();
-        showMessage("Customer saved successfully.");
-        await loadPeople();
-      };
+      showMessage("Saving customer...");
+      const { error } = await db.from("shop_customers").insert(customer);
+      if (error) { showMessage("Could not save customer: " + error.message); return; }
+      event.target.reset();
+      showMessage("Customer saved successfully.");
+      await loadPeople();
+    };
 
     async function loadPeople() {
-      const { data: { user }, error: userError } =
-        await db.auth.getUser();
-
+      const { data: { user }, error: userError } = await db.auth.getUser();
       if (userError || !user) return;
-
       const dealerList = document.getElementById("dealerList");
       const customerList = document.getElementById("customerList");
-
-      const { data: dealers, error: dealerError } = await db
-        .from("shop_dealers")
-        .select("name,phone,notes")
-        .order("name");
-
+      const { data: dealers, error: dealerError } = await db.from("shop_dealers").select("name,phone,notes").order("name");
       dealerList.replaceChildren();
-
       if (dealerError) {
-        dealerList.textContent = "Could not load dealers: " +
-          dealerError.message;
+        dealerList.textContent = "Could not load dealers: " + dealerError.message;
       } else {
         const heading = document.createElement("h3");
         heading.textContent = "Saved Dealers";
         dealerList.appendChild(heading);
-
-        if (!dealers || dealers.length === 0) {
-          dealerList.append("No dealers saved yet.");
-        } else {
-          dealers.forEach((dealer) => {
-            const item = document.createElement("p");
-            item.textContent =
-              dealer.name + " — " + dealer.phone +
-              (dealer.notes ? " — " + dealer.notes : "");
-            dealerList.appendChild(item);
-          });
-        }
+        if (!dealers || dealers.length === 0) dealerList.append("No dealers saved yet.");
+        else dealers.forEach((dealer) => {
+          const item = document.createElement("p");
+          item.textContent = dealer.name + " — " + dealer.phone + (dealer.notes ? " — " + dealer.notes : "");
+          dealerList.appendChild(item);
+        });
       }
-
-      const { data: customers, error: customerError } = await db
-        .from("shop_customers")
-        .select("name,phone,notes")
-        .order("name");
-
+      const { data: customers, error: customerError } = await db.from("shop_customers").select("name,phone,notes").order("name");
       customerList.replaceChildren();
-
       if (customerError) {
-        customerList.textContent = "Could not load customers: " +
-          customerError.message;
+        customerList.textContent = "Could not load customers: " + customerError.message;
       } else {
         const heading = document.createElement("h3");
         heading.textContent = "Saved Customers";
         customerList.appendChild(heading);
-
-        if (!customers || customers.length === 0) {
-          customerList.append("No customers saved yet.");
-        } else {
-          customers.forEach((customer) => {
-            const item = document.createElement("p");
-            item.textContent =
-              customer.name + " — " + customer.phone +
-              (customer.notes ? " — " + customer.notes : "");
-            customerList.appendChild(item);
-          });
-        }
+        if (!customers || customers.length === 0) customerList.append("No customers saved yet.");
+        else customers.forEach((customer) => {
+          const item = document.createElement("p");
+          item.textContent = customer.name + " — " + customer.phone + (customer.notes ? " — " + customer.notes : "");
+          customerList.appendChild(item);
+        });
       }
     }
 
-    document.getElementById("saleForm").onsubmit =
-      async (event) => {
-        event.preventDefault();
+    document.getElementById("saleForm").onsubmit = async (event) => {
+      event.preventDefault();
+      const { data: { user }, error: userError } = await db.auth.getUser();
+      if (userError || !user) { saleMessage.textContent = "Please sign in again."; return; }
+      const imei = document.getElementById("saleImei").value.trim();
+      const buyerType = document.getElementById("buyerType").value;
+      const buyerName = document.getElementById("buyerName").value.trim();
+      const salePrice = Number(document.getElementById("salePrice").value);
+      const amountPaid = Number(document.getElementById("amountPaid").value);
+      const saleDate = document.getElementById("saleDate").value;
+      const notes = document.getElementById("saleNotes").value.trim();
+      if (!/^\d{15}$/.test(imei)) { saleMessage.textContent = "Please enter or scan a 15-digit IMEI."; return; }
+      if (amountPaid > salePrice) { saleMessage.textContent = "Amount paid cannot be greater than the selling price."; return; }
+      if (salePrice < 0 || amountPaid < 0) { saleMessage.textContent = "Amounts cannot be negative."; return; }
 
-        const { data: { user }, error: userError } =
-          await db.auth.getUser();
-
-        if (userError || !user) {
-          saleMessage.textContent = "Please sign in again.";
-          return;
-        }
-
-        const imei = document.getElementById("saleImei").value.trim();
-        const buyerType = document.getElementById("buyerType").value;
-        const buyerName =
-          document.getElementById("buyerName").value.trim();
-        const salePrice =
-          Number(document.getElementById("salePrice").value);
-        const amountPaid =
-          Number(document.getElementById("amountPaid").value);
-        const saleDate = document.getElementById("saleDate").value;
-        const notes = document.getElementById("saleNotes").value.trim();
-
-        if (amountPaid > salePrice) {
-          saleMessage.textContent =
-            "Amount paid cannot be greater than the selling price.";
-          return;
-        }
-
-        if (salePrice < 0 || amountPaid < 0) {
-          saleMessage.textContent = "Amounts cannot be negative.";
-          return;
-        }
-
-        saleMessage.textContent = "Recording sale...";
-
-        const { error } = await db.rpc("record_shop_sale", {
-          p_imei: imei,
-          p_buyer_type: buyerType,
-          p_buyer_name: buyerName,
-          p_sale_price: salePrice,
-          p_amount_paid: amountPaid,
-          p_sale_date: saleDate,
-          p_notes: notes || null
-        });
-
-        if (error) {
-          saleMessage.textContent =
-            "Could not record sale: " + error.message;
-          return;
-        }
-
-        event.target.reset();
-        saleMessage.textContent =
-          "Sale saved! Phone marked as sold. Balance due: GHS " +
-          money(salePrice - amountPaid);
-
-        await loadStock();
-        await loadSales();
-      };
+      saleMessage.textContent = "Recording sale...";
+      const { error } = await db.rpc("record_shop_sale", {
+        p_imei: imei,
+        p_buyer_type: buyerType,
+        p_buyer_name: buyerName,
+        p_sale_price: salePrice,
+        p_amount_paid: amountPaid,
+        p_sale_date: saleDate,
+        p_notes: notes || null
+      });
+      if (error) { saleMessage.textContent = "Could not record sale: " + error.message; return; }
+      event.target.reset();
+      saleMessage.textContent = "Sale saved! Phone marked as sold. Balance due: GHS " + money(salePrice - amountPaid);
+      await loadStock();
+      await loadSales();
+    };
 
     async function loadSales() {
-      const { data: { user }, error: userError } =
-        await db.auth.getUser();
-
+      const { data: { user }, error: userError } = await db.auth.getUser();
       const salesList = document.getElementById("salesList");
       salesList.replaceChildren();
-
       if (userError || !user) return;
-
-      const { data: sales, error } = await db
-        .from("shop_sales")
-        .select(
-          "imei,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes"
-        )
+      const { data: sales, error } = await db.from("shop_sales")
+        .select("imei,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
         .order("sale_date", { ascending: false });
-
-      if (error) {
-        salesList.textContent = "Could not load sales: " + error.message;
-        return;
-      }
-
+      if (error) { salesList.textContent = "Could not load sales: " + error.message; return; }
       const heading = document.createElement("h3");
       heading.textContent = "Sales History";
       salesList.appendChild(heading);
-
-      if (!sales || sales.length === 0) {
-        salesList.append("No sales recorded yet.");
-        return;
-      }
-
+      if (!sales || sales.length === 0) { salesList.append("No sales recorded yet."); return; }
       sales.forEach((sale) => {
         const item = document.createElement("div");
         item.className = "phone";
-        item.textContent =
-          "Date: " + sale.sale_date +
+        item.textContent = "Date: " + sale.sale_date +
           "\nIMEI: " + sale.imei +
           "\nBuyer: " + sale.buyer_name + " (" + sale.buyer_type + ")" +
           "\nSale price: GHS " + money(sale.sale_price) +
           "\nPaid: GHS " + money(sale.amount_paid) +
-          "\nBalance: GHS " +
-          money(Number(sale.sale_price) - Number(sale.amount_paid)) +
+          "\nBalance: GHS " + money(Number(sale.sale_price) - Number(sale.amount_paid)) +
           (sale.notes ? "\nNotes: " + sale.notes : "");
         salesList.appendChild(item);
       });
     }
 
-    db.auth.onAuthStateChange((event, session) => {
-      setTimeout(() => {
-        refreshPage();
-      }, 0);
-    });
-
+    db.auth.onAuthStateChange(() => { setTimeout(() => { refreshPage(); }, 0); });
     refreshPage();
   </script>
 </body>
 </html>
-
