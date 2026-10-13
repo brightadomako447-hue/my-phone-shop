@@ -107,6 +107,15 @@
     const SUPABASE_URL = "https://adogjxpztzhrwsuzyuvt.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_7K0yrEV8vjTsjB6ICZW8yQ_O72gWa03";
 
+function showMessage(message) {
+  const el = document.getElementById("message");
+  if (el) {
+    el.textContent = message;
+  } else {
+    alert(message);
+  }
+}
+
     const db = window.supabase.createClient(
       SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY
     );
