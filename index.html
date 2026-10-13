@@ -436,7 +436,21 @@
       message.textContent =
         "Sale saved! Phone marked as sold. Balance due: GHS " +
         (salePrice - amountPaid).toFixed(2);
-    };
+    };document.getElementById("signIn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  const { error } = await db.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    alert("Sign-in failed: " + error.message);
+  } else {
+    location.reload();
+  }
+});
 </script>
 </body>
 </html>
