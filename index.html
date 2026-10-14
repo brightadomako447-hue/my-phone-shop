@@ -550,6 +550,61 @@
           "\nBalance: GHS " + money(Number(sale.sale_price) - Number(sale.amount_paid)) +
           (sale.notes ? "\nNotes: " + sale.notes : "");
         salesList.appendChild(item);
+    const invoiceButton = document.createElement("button");
+    invoiceButton.type = "button";
+    invoiceButton.textContent = "View / Print Invoice";
+    invoiceButton.onclick = () => {
+      const invoiceWindow = window.open("", "_blank");
+      if (!invoiceWindow) {
+        alert("Please allow pop-ups to print the invoice.");
+        return;
+      }
+
+      const escapeHTML = (value) =>
+        String(value ?? "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        })[char]);
+
+      const price = Number(sale.sale_price);
+      const paid = Number(sale.amount_paid || 0);
+      const invoiceHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Invoice ${escapeHTML(sale.invoice_number)}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
+            h1 { margin-bottom: 8px; }
+            .line { margin: 12px 0; }
+            .total { border-top: 1px solid #ccc; padding-top: 12px; font-weight: bold; }
+            button { padding: 12px 18px; margin-top: 20px; }
+            @media print { button { display: none; } }
+          </style>
+        </head>
+        <body>
+          <h1>PHONE SHOP INVOICE</h1>
+          <div class="line"><b>Invoice:</b> ${escapeHTML(sale.invoice_number)}</div>
+          <div class="line"><b>Date:</b> ${escapeHTML(sale.sale_date)}</div>
+          <div class="line"><b>Buyer:</b> ${escapeHTML(sale.buyer_name)} (${escapeHTML(sale.buyer_type)})</div>
+          <div class="line"><b>Phone IMEI:</b> ${escapeHTML(sale.imei)}</div>
+          <div class="line"><b>Selling price:</b> GHS ${price.toFixed(2)}</div>
+          <div class="line"><b>Amount paid:</b> GHS ${paid.toFixed(2)}</div>
+          <div class="line total"><b>Balance due:</b> GHS ${(price - paid).toFixed(2)}</div>
+          <p>Thank you for your business.</p>
+          <button onclick="window.print()">Print Invoice</button>
+        </body>
+        </html>`;
+
+      invoiceWindow.document.write(invoiceHTML);
+      invoiceWindow.document.close();
+    };
+    item.appendChild(invoiceButton);
+
       });
     }
 
