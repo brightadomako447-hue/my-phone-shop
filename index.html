@@ -223,7 +223,10 @@
     async function refreshPage() {
       try {
         const { data, error } = await db.auth.getSession();
-        if (error) { showMessage("Could not check sign-in: " + error.message); return; }
+        if (error) {
+  showMessage("Sign-in failed: " + error.message);
+  return;
+}
         const signedIn = !!data.session;
         document.getElementById("login").hidden = signedIn;
         document.getElementById("app").hidden = !signedIn;
