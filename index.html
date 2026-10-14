@@ -712,7 +712,7 @@ document.getElementById("loadProfitReport").onclick = async () => {
   message.textContent = "Calculating profit report...";
 
   const { data, error } = await db
-    .from("shop_sales")
+    .from("shop_sales)
     .select("sale_price,cost_at_sale,amount_paid");
 
   if (error) {
