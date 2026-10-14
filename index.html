@@ -101,6 +101,45 @@
       </form>
       <div id="saleMessage"></div>
       <div id="salesList"></div>
+<div class="phone">
+  <h3>Record Additional Payment</h3>
+  <form id="paymentForm">
+    <input
+      id="paymentInvoice"
+      type="text"
+      placeholder="Invoice number"
+      required
+    >
+
+    <input
+      id="paymentAmount"
+      type="number"
+      min="0.01"
+      step="0.01"
+      placeholder="Payment amount (GHS)"
+      required
+    >
+
+    <select id="paymentMethod" required>
+      <option value="">Select payment method</option>
+      <option value="Cash">Cash</option>
+      <option value="Mobile Money">Mobile Money</option>
+      <option value="Bank Transfer">Bank Transfer</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <input
+      id="paymentNotes"
+      type="text"
+      placeholder="Notes (optional)"
+    >
+
+    <button type="submit">Record Payment</button>
+  </form>
+
+  <div id="paymentMessage"></div>
+</div>
+
     </section>
 
     <section id="returnsPanel">
@@ -607,6 +646,49 @@
 
       });
     }
+
+document.getElementById("paymentForm").onsubmit = async (event) => {
+  event.preventDefault();
+
+  const paymentMessage = document.getElementById("paymentMessage");
+  const invoiceNumber = document.getElementById("paymentInvoice").value.trim();
+  const amount = Number(document.getElementById("paymentAmount").value);
+  const method = document.getElementById("paymentMethod").value;
+  const notes = document.getElementById("paymentNotes").value.trim();
+
+  if (!invoiceNumber) {
+    paymentMessage.textContent = "Please enter an invoice number.";
+    return;
+  }
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    paymentMessage.textContent = "Enter a payment greater than zero.";
+    return;
+  }
+
+  paymentMessage.textContent = "Recording payment...";
+
+  const { data, error } = await db.rpc("record_shop_payment", {
+    p_invoice_number: invoiceNumber,
+    p_amount: amount,
+    p_method: method || null,
+    p_notes: notes || null
+  });
+
+  if (error) {
+    paymentMessage.textContent = "Payment not saved: " + error.message;
+    return;
+  }
+
+  document.getElementById("paymentForm").reset();
+
+  paymentMessage.textContent =
+    "Payment saved! Invoice: " + data.invoice_number +
+    ". Total paid: GHS " + money(data.amount_paid) +
+    ". Balance due: GHS " + money(data.balance_due);
+
+  await loadSales();
+};
 
     db.auth.onAuthStateChange(() => { setTimeout(() => { refreshPage(); }, 0); });
     refreshPage();
