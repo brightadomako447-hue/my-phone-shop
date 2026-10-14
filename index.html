@@ -141,6 +141,22 @@
 </div>
 
     </section>
+<section>
+  <h2>Profit Reports</h2>
+  <button type="button" id="loadProfitReport">
+    Generate Profit Report
+  </button>
+  <div id="profitReportMessage"></div>
+
+  <div class="phone">
+    <p>Total sales: <strong id="reportTotalSales">GHS 0.00</strong></p>
+    <p>Phone costs: <strong id="reportTotalCosts">GHS 0.00</strong></p>
+    <p>Gross profit: <strong id="reportGrossProfit">GHS 0.00</strong></p>
+    <p>Payments received: <strong id="reportPaymentsReceived">GHS 0.00</strong></p>
+    <p>Outstanding balances: <strong id="reportOutstanding">GHS 0.00</strong></p>
+  </div>
+</section>
+
 
     <section id="returnsPanel">
       <h2>Returns &amp; Exchanges</h2>
@@ -688,6 +704,60 @@ document.getElementById("paymentForm").onsubmit = async (event) => {
     ". Balance due: GHS " + money(data.balance_due);
 
   await loadSales();
+};
+
+document.getElementById("loadProfitReport").onclick = async () => {
+  const message = document.getElementById("profitReportMessage");
+
+  message.textContent = "Calculating profit report...";
+
+  const { data, error } = await db
+    .from("shop_sales")
+    .select("sale_price,cost_at_sale,amount_paid");
+
+  if (error) {
+    message.textContent = "Could not load report: " + error.message;
+    return;
+  }
+
+  const sales = data || [];
+
+  const totalSales = sales.reduce(
+    (sum, sale) => sum + Number(sale.sale_price || 0), 0
+  );
+
+  const totalCosts = sales.reduce(
+    (sum, sale) => sum + Number(sale.cost_at_sale || 0), 0
+  );
+
+  const paymentsReceived = sales.reduce(
+    (sum, sale) => sum + Number(sale.amount_paid || 0), 0
+  );
+
+  const outstanding = sales.reduce(
+    (sum, sale) =>
+      sum + Number(sale.sale_price || 0) -
+      Number(sale.amount_paid || 0), 0
+  );
+
+  document.getElementById("reportTotalSales").textContent =
+    "GHS " + money(totalSales);
+
+  document.getElementById("reportTotalCosts").textContent =
+    "GHS " + money(totalCosts);
+
+  document.getElementById("reportGrossProfit").textContent =
+    "GHS " + money(totalSales - totalCosts);
+
+  document.getElementById("reportPaymentsReceived").textContent =
+    "GHS " + money(paymentsReceived);
+
+  document.getElementById("reportOutstanding").textContent =
+    "GHS " + money(outstanding);
+
+  message.textContent = sales.length
+    ? "Profit report updated successfully."
+    : "No sales recorded yet. Figures are currently zero.";
 };
 
     db.auth.onAuthStateChange(() => { setTimeout(() => { refreshPage(); }, 0); });
