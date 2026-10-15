@@ -23,7 +23,7 @@
 </head>
 <body>
   <h1>My Phone Shop</h1>
-  <section id="dashboard">
+  <section id="dashboard" hidden>
   <h2>Business Dashboard</h2>
   <div class="phone">
     <p>Phones in stock: <strong id="dashStock">0</strong></p>
@@ -145,6 +145,7 @@
         const { data, error } = await db.auth.getSession();
         if (error) { showMessage("Could not check sign-in: " + error.message); return; }
         const signedIn = !!data.session;
+        document.getElementById("dashboard").hidden = !signedIn;
         document.getElementById("login").hidden = signedIn;
         document.getElementById("app").hidden = !signedIn;
         if (signedIn) {
