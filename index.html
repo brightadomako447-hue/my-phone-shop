@@ -232,6 +232,7 @@
         document.getElementById("app").hidden = !signedIn;
         if (signedIn) {
           await loadStock();
+          await loadDashboard();
           await loadPeople();
           await loadSales();
           await loadReturns();
