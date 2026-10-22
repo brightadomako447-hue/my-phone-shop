@@ -679,7 +679,82 @@ async function loadDashboard() {
         alert("Please allow pop-ups to print the invoice.");
         return;
       }
+async function loadPayments() {
+  const list = document.getElementById("paymentsList");
+  if (!list) return;
 
+  list.innerHTML = "Loading payment history...";
+
+  const { data: payments, error } = await db
+    .from("shop_payments")
+    .select("id, sale_id, amount, paid_at, method, notes")
+    .order("paid_at", { ascending: false });
+
+  if (error) {
+    list.innerHTML = "Could not load payments: " + escapeHTML(error.message);
+    return;
+  }
+
+  if (!payments || payments.length === 0) {
+    list.innerHTML = "<p>No additional payments recorded yet.</p>";
+    return;
+  }
+
+  const saleIds = [...new Set(payments.map(p => p.sale_id).filter(Boolean))];
+  let sales = [];
+
+  if (saleIds.length > 0) {
+    const result = await db
+      .from("shop_sales")
+      .select("id, invoice_number")
+      .in("id", saleIds);
+
+    if (result.error) {
+      list.innerHTML = "Could not load invoice details: " + escapeHTML(result.error.message);
+      return;
+    }
+
+    sales = result.data || [];
+  }
+
+  const invoiceById = {};
+  sales.forEach(sale => {
+    invoiceById[sale.id] = sale.invoice_number || "Invoice";
+  });
+
+  list.innerHTML = "<h3>Additional Payment History</h3>" + payments.map(payment => `
+    <div style="border:1px solid #ddd;padding:12px;margin:10px 0;border-radius:8px;background:white;">
+      <strong>${escapeHTML(invoiceById[payment.sale_id] || "Invoice")}</strong>
+      <p>Amount: GHS ${Number(payment.amount).toFixed(2)}</p>
+      <p>Date: ${escapeHTML(payment.paid_at ? new Date(payment.paid_at).toLocaleString() : "")}</p>
+      <p>Method: ${escapeHTML(payment.method || "Not specified")}</p>
+      <p>Notes: ${escapeHTML(payment.notes || "None")}</p>
+      <button type="button" onclick="deleteShopPayment('${payment.id}')">Delete Payment</button>
+    </div>
+  `).join("");
+}
+
+async function deleteShopPayment(paymentId) {
+  const confirmed = confirm("Delete this additional payment? The invoice balance will be recalculated.");
+  if (!confirmed) return;
+
+  const message = document.getElementById("paymentMessage");
+  message.textContent = "Deleting payment...";
+
+  const { data, error } = await db.rpc("delete_shop_payment", {
+    p_payment_id: paymentId
+  });
+
+  if (error) {
+    message.textContent = "Could not delete payment: " + error.message;
+    return;
+  }
+
+  message.textContent = "Payment deleted. Invoice balance has been recalculated.";
+  await loadPayments();
+  await loadSales();
+  if (typeof loadDashboard === "function") await loadDashboard();
+}
       const escapeHTML = (value) =>
         String(value ?? "").replace(/[&<>"']/g, (char) => ({
           "&": "&amp;",
