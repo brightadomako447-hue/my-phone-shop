@@ -464,32 +464,88 @@
       await loadSales();
     };
 
-    async function loadSales() {
-      const { data: { user }, error: userError } = await db.auth.getUser();
-      const salesList = document.getElementById("salesList");
-      salesList.replaceChildren();
-      if (userError || !user) return;
-      const { data: sales, error } = await db.from("shop_sales")
-        .select("imei,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
-        .order("sale_date", { ascending: false });
-      if (error) { salesList.textContent = "Could not load sales: " + error.message; return; }
-      const heading = document.createElement("h3");
-      heading.textContent = "Sales History";
-      salesList.appendChild(heading);
-      if (!sales || sales.length === 0) { salesList.append("No sales recorded yet."); return; }
-      sales.forEach((sale) => {
-        const item = document.createElement("div");
-        item.className = "phone";
-        item.textContent = "Date: " + sale.sale_date +
-          "\nIMEI: " + sale.imei +
-          "\nBuyer: " + sale.buyer_name + " (" + sale.buyer_type + ")" +
-          "\nSale price: GHS " + money(sale.sale_price) +
-          "\nPaid: GHS " + money(sale.amount_paid) +
-          "\nBalance: GHS " + money(Number(sale.sale_price) - Number(sale.amount_paid)) +
-          (sale.notes ? "\nNotes: " + sale.notes : "");
-        salesList.appendChild(item);
-      });
-    }
+    
+async function loadSales() {
+  const { data: { user }, error: userError } = await db.auth.getUser();
+  const salesList = document.getElementById("salesList");
+  salesList.replaceChildren();
+
+  if (userError || !user) return;
+
+  const { data: sales, error } = await db.from("shop_sales")
+    .select("id,imei,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
+    .eq("owner_id", user.id)
+    .order("sale_date", { ascending: false });
+
+  if (error) {
+    salesList.textContent = "Could not load sales: " + error.message;
+    return;
+  }
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Sales History";
+  salesList.appendChild(heading);
+
+  if (!sales || sales.length === 0) {
+    salesList.append("No sales recorded yet.");
+    return;
+  }
+
+  sales.forEach((sale) => {
+    const item = document.createElement("div");
+    item.className = "phone";
+
+    const details = document.createElement("p");
+    details.style.whiteSpace = "pre-wrap";
+    details.textContent =
+      "Date: " + sale.sale_date +
+      "\nIMEI: " + sale.imei +
+      "\nBuyer: " + sale.buyer_name + " (" + sale.buyer_type + ")" +
+      "\nSale price: GHS " + money(sale.sale_price) +
+      "\nPaid: GHS " + money(sale.amount_paid) +
+      "\nBalance: GHS " +
+      money(Number(sale.sale_price) - Number(sale.amount_paid)) +
+      (sale.notes ? "\nNotes: " + sale.notes : "");
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.textContent = "Delete Sale";
+
+    deleteButton.onclick = async () => {
+      if (!confirm("Delete this sale and return its phone to stock? This cannot be undone.")) return;
+
+      deleteButton.disabled = true;
+      deleteButton.textContent = "Deleting...";
+
+      try {
+        const { error: deleteError } = await db.rpc(
+          "delete_shop_sale",
+          { p_sale_id: sale.id }
+        );
+
+        if (deleteError) {
+          alert("Could not delete sale: " + deleteError.message);
+          return;
+        }
+
+        alert("Sale deleted and phone returned to stock.");
+        await loadSales();
+        await loadStock();
+        await loadDashboard();
+      } catch (error) {
+        alert("Something went wrong: " + error.message);
+      } finally {
+        deleteButton.disabled = false;
+        deleteButton.textContent = "Delete Sale";
+      }
+    };
+
+    item.appendChild(details);
+    item.appendChild(deleteButton);
+    salesList.appendChild(item);
+  });
+}
+
 
     db.auth.onAuthStateChange(() => { setTimeout(() => { refreshPage(); }, 0); });
     refreshPage();
