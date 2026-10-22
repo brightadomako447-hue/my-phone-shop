@@ -651,7 +651,9 @@ async function loadDashboard() {
       salesList.replaceChildren();
       if (userError || !user) return;
       const { data: sales, error } = await db.from("shop_sales")
-        .select("imei,invoice_number,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
+        
+.select("id,imei,invoice_number,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
+
         .order("sale_date", { ascending: false });
       if (error) { salesList.textContent = "Could not load sales: " + error.message; return; }
       const heading = document.createElement("h3");
