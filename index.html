@@ -236,7 +236,50 @@
 
     function showMessage(text) { message.textContent = text; }
     function money(value) { return Number(value || 0).toFixed(2); }
+async function loadDashboard() {
+  const stockResult = await db
+    .from("shop_phones")
+    .select("status");
 
+  if (stockResult.error) {
+    showMessage("Could not load dashboard stock: " + stockResult.error.message);
+    return;
+  }
+
+  const salesResult = await db
+    .from("shop_sales")
+    .select("sale_price,cost_at_sale,amount_paid");
+
+  if (salesResult.error) {
+    showMessage("Could not load dashboard sales: " + salesResult.error.message);
+    return;
+  }
+
+  const phones = stockResult.data || [];
+  const sales = salesResult.data || [];
+
+  const inStock = phones.filter(phone => phone.status === "in_stock").length;
+  const totalReceived = sales.reduce(
+    (sum, sale) => sum + Number(sale.amount_paid || 0), 0
+  );
+  const totalOutstanding = sales.reduce(
+    (sum, sale) => sum + Number(sale.sale_price || 0)
+      - Number(sale.amount_paid || 0), 0
+  );
+  const totalProfit = sales.reduce(
+    (sum, sale) => sum + Number(sale.sale_price || 0)
+      - Number(sale.cost_at_sale || 0), 0
+  );
+
+  document.getElementById("dashStock").textContent = inStock;
+  document.getElementById("dashSold").textContent = sales.length;
+  document.getElementById("dashReceived").textContent =
+    "GHS " + money(totalReceived);
+  document.getElementById("dashOutstanding").textContent =
+    "GHS " + money(totalOutstanding);
+  document.getElementById("dashProfit").textContent =
+    "GHS " + money(totalProfit);
+}
     async function refreshPage() {
       try {
         const { data, error } = await db.auth.getSession();
