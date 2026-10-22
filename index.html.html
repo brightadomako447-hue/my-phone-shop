@@ -131,6 +131,47 @@
     function showMessage(text) { message.textContent = text; }
     function money(value) { return Number(value || 0).toFixed(2); }
 
+  async function loadDashboard() {
+  const { data: phones, error: phoneError } = await db
+    .from("shop_phones")
+    .select("status");
+
+  if (phoneError) throw phoneError;
+
+  const { data: sales, error: salesError } = await db
+    .from("shop_sales")
+    .select("sale_price, cost_at_sale, amount_paid");
+
+  if (salesError) throw salesError;
+
+  const inStock = (phones || []).filter(
+    phone => phone.status === "in_stock"
+  ).length;
+
+  const sold = sales || [];
+  const moneyReceived = sold.reduce(
+    (total, sale) => total + Number(sale.amount_paid || 0), 0
+  );
+  const outstanding = sold.reduce(
+    (total, sale) =>
+      total + Number(sale.sale_price || 0) - Number(sale.amount_paid || 0),
+    0
+  );
+  const profit = sold.reduce(
+    (total, sale) =>
+      total + Number(sale.sale_price || 0) - Number(sale.cost_at_sale || 0),
+    0
+  );
+
+  document.getElementById("dashStock").textContent = inStock;
+  document.getElementById("dashSold").textContent = sold.length;
+  document.getElementById("dashReceived").textContent =
+    "GHS " + moneyReceived.toFixed(2);
+  document.getElementById("dashOutstanding").textContent =
+    "GHS " + outstanding.toFixed(2);
+  document.getElementById("dashProfit").textContent =
+    "GHS " + profit.toFixed(2);
+}
     async function refreshPage() {
       try {
         const { data, error } = await db.auth.getSession();
