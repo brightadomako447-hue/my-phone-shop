@@ -601,59 +601,36 @@
       await loadSales();
     };
 
-    
-async function loadSales() {
-  const { data: { user }, error: userError } = await db.auth.getUser();
-  const salesList = document.getElementById("salesList");
-  salesList.replaceChildren();
-
-  if (userError || !user) return;
-
-  const { data: sales, error } = await db.from("shop_sales")
-    .select("id,imei,invoice_number,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
-    .eq("owner_id", user.id)
-    .order("sale_date", { ascending: false });
-
-  if (error) {
-    salesList.textContent = "Could not load sales: " + error.message;
-    return;
-  }
-
-  const heading = document.createElement("h3");
-  heading.textContent = "Sales History";
-  salesList.appendChild(heading);
-
-  if (!sales || sales.length === 0) {
-    salesList.append("No sales recorded yet.");
-    return;
-  }
-
-  sales.forEach((sale) => {
-    const item = document.createElement("div");
-    item.className = "phone";
-
-    const details = document.createElement("p");
-    details.style.whiteSpace = "pre-wrap";
-    details.textContent =
-      "Date: " + sale.sale_date +
-      "\nInvoice: " + (sale.invoice_number || "N/A") +
-      "\nIMEI: " + sale.imei +
-      "\nBuyer: " + sale.buyer_name + " (" + sale.buyer_type + ")" +
-      "\nSale price: GHS " + money(sale.sale_price) +
-      "\nPaid: GHS " + money(sale.amount_paid) +
-      "\nBalance: GHS " +
-      money(Number(sale.sale_price) - Number(sale.amount_paid)) +
-      (sale.notes ? "\nNotes: " + sale.notes : "");
-
-    item.appendChild(details);
-
+    async function loadSales() {
+      const { data: { user }, error: userError } = await db.auth.getUser();
+      const salesList = document.getElementById("salesList");
+      salesList.replaceChildren();
+      if (userError || !user) return;
+      const { data: sales, error } = await db.from("shop_sales")
+        .select("imei,invoice_number,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
+        .order("sale_date", { ascending: false });
+      if (error) { salesList.textContent = "Could not load sales: " + error.message; return; }
+      const heading = document.createElement("h3");
+      heading.textContent = "Sales History";
+      salesList.appendChild(heading);
+      if (!sales || sales.length === 0) { salesList.append("No sales recorded yet."); return; }
+      sales.forEach((sale) => {
+        const item = document.createElement("div");
+        item.className = "phone";
+        item.textContent = "Date: " + sale.sale_date +
+"\nInvoice: " + sale.invoice_number +
+          "\nIMEI: " + sale.imei +
+          "\nBuyer: " + sale.buyer_name + " (" + sale.buyer_type + ")" +
+          "\nSale price: GHS " + money(sale.sale_price) +
+          "\nPaid: GHS " + money(sale.amount_paid) +
+          "\nBalance: GHS " + money(Number(sale.sale_price) - Number(sale.amount_paid)) +
+          (sale.notes ? "\nNotes: " + sale.notes : "");
+        salesList.appendChild(item);
     const invoiceButton = document.createElement("button");
     invoiceButton.type = "button";
     invoiceButton.textContent = "View / Print Invoice";
-
     invoiceButton.onclick = () => {
       const invoiceWindow = window.open("", "_blank");
-
       if (!invoiceWindow) {
         alert("Please allow pop-ups to print the invoice.");
         return;
@@ -670,7 +647,6 @@ async function loadSales() {
 
       const price = Number(sale.sale_price);
       const paid = Number(sale.amount_paid || 0);
-
       const invoiceHTML = `
         <!DOCTYPE html>
         <html>
@@ -687,7 +663,7 @@ async function loadSales() {
           </style>
         </head>
         <body>
-          <h1>SAVAGE iSTORE</h1>
+          <h1>PHONE SHOP INVOICE</h1>
           <div class="line"><b>Invoice:</b> ${escapeHTML(sale.invoice_number)}</div>
           <div class="line"><b>Date:</b> ${escapeHTML(sale.sale_date)}</div>
           <div class="line"><b>Buyer:</b> ${escapeHTML(sale.buyer_name)} (${escapeHTML(sale.buyer_type)})</div>
@@ -703,52 +679,43 @@ async function loadSales() {
       invoiceWindow.document.write(invoiceHTML);
       invoiceWindow.document.close();
     };
-
     item.appendChild(invoiceButton);
 
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.textContent = "Delete Sale";
-    deleteButton.className = "secondary";
+      });
+    }
 
-    deleteButton.onclick = async () => {
-      if (!confirm(
-        "Delete this sale and return its phone to stock? This cannot be undone."
-      )) return;
+document.getElementById("paymentForm").onsubmit = async (event) => {
+  event.preventDefault();
 
-      deleteButton.disabled = true;
-      deleteButton.textContent = "Deleting...";
+  const paymentMessage = document.getElementById("paymentMessage");
+  const invoiceNumber = document.getElementById("paymentInvoice").value.trim();
+  const amount = Number(document.getElementById("paymentAmount").value);
+  const method = document.getElementById("paymentMethod").value;
+  const notes = document.getElementById("paymentNotes").value.trim();
 
-      try {
-        const { error: deleteError } = await db.rpc(
-          "delete_shop_sale",
-          { p_sale_id: sale.id }
-        );
+  if (!invoiceNumber) {
+    paymentMessage.textContent = "Please enter an invoice number.";
+    return;
+  }
 
-        if (deleteError) {
-          alert("Could not delete sale: " + deleteError.message);
-          return;
-        }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    paymentMessage.textContent = "Enter a payment greater than zero.";
+    return;
+  }
 
-        alert("Sale deleted and phone returned to stock.");
-        await loadSales();
-        await loadStock();
-        await loadDashboard();
-      } catch (error) {
-        alert("Something went wrong: " + error.message);
-      } finally {
-        deleteButton.disabled = false;
-        deleteButton.textContent = "Delete Sale";
-      }
-    };
+  paymentMessage.textContent = "Recording payment...";
 
-    item.appendChild(deleteButton);
-
-    // This line displays the sale and its buttons on the page.
-    salesList.appendChild(item);
+  const { data, error } = await db.rpc("record_shop_payment", {
+    p_invoice_number: invoiceNumber,
+    p_amount: amount,
+    p_method: method || null,
+    p_notes: notes || null
   });
-}
 
+  if (error) {
+    paymentMessage.textContent = "Payment not saved: " + error.message;
+    return;
+  }
 
   document.getElementById("paymentForm").reset();
 
