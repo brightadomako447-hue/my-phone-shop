@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+z<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -645,165 +645,239 @@ async function loadDashboard() {
       await loadSales();
     };
 
+    
+    const escapeHTML = (value) =>
+      String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+
     async function loadSales() {
       const { data: { user }, error: userError } = await db.auth.getUser();
       const salesList = document.getElementById("salesList");
       salesList.replaceChildren();
-      if (userError || !user) return;
-      const { data: sales, error } = await db.from("shop_sales")
-        
-.select("id,imei,invoice_number,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
 
+      if (userError || !user) return;
+
+      const { data: sales, error } = await db.from("shop_sales")
+        .select("id,imei,invoice_number,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
         .order("sale_date", { ascending: false });
-      if (error) { salesList.textContent = "Could not load sales: " + error.message; return; }
+
+      if (error) {
+        salesList.textContent = "Could not load sales: " + error.message;
+        return;
+      }
+
       const heading = document.createElement("h3");
       heading.textContent = "Sales History";
       salesList.appendChild(heading);
-      if (!sales || sales.length === 0) { salesList.append("No sales recorded yet."); return; }
+
+      if (!sales || sales.length === 0) {
+        salesList.append("No sales recorded yet.");
+        return;
+      }
+
       sales.forEach((sale) => {
         const item = document.createElement("div");
         item.className = "phone";
         item.textContent = "Date: " + sale.sale_date +
-"\nInvoice: " + sale.invoice_number +
+          "\nInvoice: " + sale.invoice_number +
           "\nIMEI: " + sale.imei +
           "\nBuyer: " + sale.buyer_name + " (" + sale.buyer_type + ")" +
           "\nSale price: GHS " + money(sale.sale_price) +
           "\nPaid: GHS " + money(sale.amount_paid) +
-          "\nBalance: GHS " + money(Number(sale.sale_price) - Number(sale.amount_paid)) +
+          "\nBalance: GHS " +
+          money(Number(sale.sale_price) - Number(sale.amount_paid)) +
           (sale.notes ? "\nNotes: " + sale.notes : "");
+
+        const editImeiButton = document.createElement("button");
+        editImeiButton.type = "button";
+        editImeiButton.textContent = "Edit IMEI";
+
+        editImeiButton.onclick = async () => {
+          const newImei = prompt(
+            "Enter the correct 15-digit IMEI:",
+            sale.imei
+          );
+
+          if (newImei === null) return;
+
+          const correctedImei = newImei.trim();
+
+          if (!/^\d{15}$/.test(correctedImei)) {
+            alert("Please enter a valid 15-digit IMEI.");
+            return;
+          }
+
+          if (correctedImei === sale.imei) {
+            alert("The IMEI has not changed.");
+            return;
+          }
+
+          if (!confirm(
+            "Correct this sale's IMEI to " + correctedImei +
+            "?\nThe original phone will return to stock."
+          )) return;
+
+          const { error } = await db.rpc("correct_shop_sale_imei", {
+            p_sale_id: sale.id,
+            p_new_imei: correctedImei
+          });
+
+          if (error) {
+            alert("Could not correct IMEI: " + error.message);
+            return;
+          }
+
+          alert("IMEI corrected successfully!");
+          await loadStock();
+          await loadSales();
+        };
+
+        item.appendChild(editImeiButton);
+
+        const invoiceButton = document.createElement("button");
+        invoiceButton.type = "button";
+        invoiceButton.textContent = "View / Print Invoice";
+
+        invoiceButton.onclick = () => {
+          const invoiceWindow = window.open("", "_blank");
+
+          if (!invoiceWindow) {
+            alert("Please allow pop-ups to print the invoice.");
+            return;
+          }
+
+          const price = Number(sale.sale_price);
+          const paid = Number(sale.amount_paid || 0);
+
+          const invoiceHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Invoice ${escapeHTML(sale.invoice_number)}</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
+                h1 { margin-bottom: 8px; }
+                .line { margin: 12px 0; }
+                .total { border-top: 1px solid #ccc; padding-top: 12px; font-weight: bold; }
+                button { padding: 12px 18px; margin-top: 20px; }
+                @media print { button { display: none; } }
+              </style>
+            </head>
+            <body>
+              <h1>PHONE SHOP INVOICE</h1>
+              <div class="line"><b>Invoice:</b> ${escapeHTML(sale.invoice_number)}</div>
+              <div class="line"><b>Date:</b> ${escapeHTML(sale.sale_date)}</div>
+              <div class="line"><b>Buyer:</b> ${escapeHTML(sale.buyer_name)} (${escapeHTML(sale.buyer_type)})</div>
+              <div class="line"><b>Phone IMEI:</b> ${escapeHTML(sale.imei)}</div>
+              <div class="line"><b>Selling price:</b> GHS ${price.toFixed(2)}</div>
+              <div class="line"><b>Amount paid:</b> GHS ${paid.toFixed(2)}</div>
+              <div class="line total"><b>Balance due:</b> GHS ${(price - paid).toFixed(2)}</div>
+              <p>Thank you for your business.</p>
+              <button onclick="window.print()">Print Invoice</button>
+            </body>
+            </html>`;
+
+          invoiceWindow.document.write(invoiceHTML);
+          invoiceWindow.document.close();
+        };
+
+        item.appendChild(invoiceButton);
         salesList.appendChild(item);
-    const invoiceButton = document.createElement("button");
-    invoiceButton.type = "button";
-    invoiceButton.textContent = "View / Print Invoice";
-    invoiceButton.onclick = () => {
-      const invoiceWindow = window.open("", "_blank");
-      if (!invoiceWindow) {
-        alert("Please allow pop-ups to print the invoice.");
-        return;
-      }
-async function loadPayments() {
-  const list = document.getElementById("paymentsList");
-  if (!list) return;
-
-  list.innerHTML = "Loading payment history...";
-
-  const { data: payments, error } = await db
-    .from("shop_payments")
-    .select("id, sale_id, amount, paid_at, method, notes")
-    .order("paid_at", { ascending: false });
-
-  if (error) {
-    list.innerHTML = "Could not load payments: " + escapeHTML(error.message);
-    return;
-  }
-
-  if (!payments || payments.length === 0) {
-    list.innerHTML = "<p>No additional payments recorded yet.</p>";
-    return;
-  }
-
-  const saleIds = [...new Set(payments.map(p => p.sale_id).filter(Boolean))];
-  let sales = [];
-
-  if (saleIds.length > 0) {
-    const result = await db
-      .from("shop_sales")
-      .select("id, invoice_number")
-      .in("id", saleIds);
-
-    if (result.error) {
-      list.innerHTML = "Could not load invoice details: " + escapeHTML(result.error.message);
-      return;
-    }
-
-    sales = result.data || [];
-  }
-
-  const invoiceById = {};
-  sales.forEach(sale => {
-    invoiceById[sale.id] = sale.invoice_number || "Invoice";
-  });
-
-  list.innerHTML = "<h3>Additional Payment History</h3>" + payments.map(payment => `
-    <div style="border:1px solid #ddd;padding:12px;margin:10px 0;border-radius:8px;background:white;">
-      <strong>${escapeHTML(invoiceById[payment.sale_id] || "Invoice")}</strong>
-      <p>Amount: GHS ${Number(payment.amount).toFixed(2)}</p>
-      <p>Date: ${escapeHTML(payment.paid_at ? new Date(payment.paid_at).toLocaleString() : "")}</p>
-      <p>Method: ${escapeHTML(payment.method || "Not specified")}</p>
-      <p>Notes: ${escapeHTML(payment.notes || "None")}</p>
-      <button type="button" onclick="deleteShopPayment('${payment.id}')">Delete Payment</button>
-    </div>
-  `).join("");
-}
-
-async function deleteShopPayment(paymentId) {
-  const confirmed = confirm("Delete this additional payment? The invoice balance will be recalculated.");
-  if (!confirmed) return;
-
-  const message = document.getElementById("paymentMessage");
-  message.textContent = "Deleting payment...";
-
-  const { data, error } = await db.rpc("delete_shop_payment", {
-    p_payment_id: paymentId
-  });
-
-  if (error) {
-    message.textContent = "Could not delete payment: " + error.message;
-    return;
-  }
-
-  message.textContent = "Payment deleted. Invoice balance has been recalculated.";
-  await loadPayments();
-  await loadSales();
-  if (typeof loadDashboard === "function") await loadDashboard();
-}
-      const escapeHTML = (value) =>
-        String(value ?? "").replace(/[&<>"']/g, (char) => ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;"
-        })[char]);
-
-      const price = Number(sale.sale_price);
-      const paid = Number(sale.amount_paid || 0);
-      const invoiceHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Invoice ${escapeHTML(sale.invoice_number)}</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
-            h1 { margin-bottom: 8px; }
-            .line { margin: 12px 0; }
-            .total { border-top: 1px solid #ccc; padding-top: 12px; font-weight: bold; }
-            button { padding: 12px 18px; margin-top: 20px; }
-            @media print { button { display: none; } }
-          </style>
-        </head>
-        <body>
-          <h1>PHONE SHOP INVOICE</h1>
-          <div class="line"><b>Invoice:</b> ${escapeHTML(sale.invoice_number)}</div>
-          <div class="line"><b>Date:</b> ${escapeHTML(sale.sale_date)}</div>
-          <div class="line"><b>Buyer:</b> ${escapeHTML(sale.buyer_name)} (${escapeHTML(sale.buyer_type)})</div>
-          <div class="line"><b>Phone IMEI:</b> ${escapeHTML(sale.imei)}</div>
-          <div class="line"><b>Selling price:</b> GHS ${price.toFixed(2)}</div>
-          <div class="line"><b>Amount paid:</b> GHS ${paid.toFixed(2)}</div>
-          <div class="line total"><b>Balance due:</b> GHS ${(price - paid).toFixed(2)}</div>
-          <p>Thank you for your business.</p>
-          <button onclick="window.print()">Print Invoice</button>
-        </body>
-        </html>`;
-
-      invoiceWindow.document.write(invoiceHTML);
-      invoiceWindow.document.close();
-    };
-    item.appendChild(invoiceButton);
-
       });
     }
+
+    async function loadPayments() {
+      const list = document.getElementById("paymentsList");
+      if (!list) return;
+
+      list.innerHTML = "Loading payment history...";
+
+      const { data: payments, error } = await db
+        .from("shop_payments")
+        .select("id, sale_id, amount, paid_at, method, notes")
+        .order("paid_at", { ascending: false });
+
+      if (error) {
+        list.textContent = "Could not load payments: " + escapeHTML(error.message);
+        return;
+      }
+
+      if (!payments || payments.length === 0) {
+        list.innerHTML = "<p>No additional payments recorded yet.</p>";
+        return;
+      }
+
+      const saleIds = [...new Set(payments.map(p => p.sale_id).filter(Boolean))];
+      let sales = [];
+
+      if (saleIds.length > 0) {
+        const result = await db
+          .from("shop_sales")
+          .select("id, invoice_number")
+          .in("id", saleIds);
+
+        if (result.error) {
+          list.textContent = "Could not load invoice details: " +
+            escapeHTML(result.error.message);
+          return;
+        }
+
+        sales = result.data || [];
+      }
+
+      const invoiceById = {};
+      sales.forEach(sale => {
+        invoiceById[sale.id] = sale.invoice_number || "Invoice";
+      });
+
+      list.innerHTML = "<h3>Additional Payment History</h3>" +
+        payments.map(payment => `
+          <div style="border:1px solid #ddd;padding:12px;margin:10px 0;border-radius:8px;background:white;">
+            <strong>${escapeHTML(invoiceById[payment.sale_id] || "Invoice")}</strong>
+            <p>Amount: GHS ${Number(payment.amount).toFixed(2)}</p>
+            <p>Date: ${escapeHTML(payment.paid_at ? new Date(payment.paid_at).toLocaleString() : "")}</p>
+            <p>Method: ${escapeHTML(payment.method || "Not specified")}</p>
+            <p>Notes: ${escapeHTML(payment.notes || "None")}</p>
+            <button type="button" onclick="deleteShopPayment('${payment.id}')">Delete Payment</button>
+          </div>
+        `).join("");
+    }
+
+    async function deleteShopPayment(paymentId) {
+      const confirmed = confirm(
+        "Delete this additional payment? The invoice balance will be recalculated."
+      );
+      if (!confirmed) return;
+
+      const message = document.getElementById("paymentMessage");
+      message.textContent = "Deleting payment...";
+
+      const { error } = await db.rpc("delete_shop_payment", {
+        p_payment_id: paymentId
+      });
+
+      if (error) {
+        message.textContent = "Could not delete payment: " + error.message;
+        return;
+      }
+
+      message.textContent =
+        "Payment deleted. Invoice balance has been recalculated.";
+
+      await loadPayments();
+      await loadSales();
+
+      if (typeof loadDashboard === "function") {
+        await loadDashboard();
+      }
+    }
+
 
 document.getElementById("paymentForm").onsubmit = async (event) => {
   event.preventDefault();
