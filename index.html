@@ -685,8 +685,37 @@ updateReturnFields();
       const { data: { user }, error: userError } = await db.auth.getUser();
       const salesList = document.getElementById("salesList");
       salesList.replaceChildren();
+    
+const salesControls = document.createElement("div");
+salesControls.style.display = "flex";
+salesControls.style.gap = "10px";
+salesControls.style.margin = "12px 0";
 
-      if (userError || !user) return;
+const hideSalesButton = document.createElement("button");
+hideSalesButton.textContent = "Hide Sales";
+
+const viewAllSalesButton = document.createElement("button");
+viewAllSalesButton.textContent = "View All Sales";
+
+hideSalesButton.type = "button";
+viewAllSalesButton.type = "button";
+
+hideSalesButton.onclick = () => {
+  salesList.querySelectorAll(".phone").forEach(item => {
+    item.hidden = true;
+  });
+};
+
+viewAllSalesButton.onclick = () => {
+  salesList.querySelectorAll(".phone").forEach(item => {
+    item.hidden = false;
+  });
+};
+
+salesControls.append(hideSalesButton, viewAllSalesButton);
+salesList.appendChild(salesControls);
+
+    if (userError || !user) return;
 
      
 const { data: sales, error } = await db.from("shop_sales")
