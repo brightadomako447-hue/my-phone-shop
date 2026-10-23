@@ -1,4 +1,4 @@
-z<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -403,7 +403,9 @@ async function loadDashboard() {
 
     const returnTypeEl = document.getElementById("returnType");
     function updateReturnFields() {
-      const isExchange = returnTypeEl.value === "exchange";
+      const isExchange = return_type: returnTypeEl.value.trim().toLowerCase() === "exchange"
+  ? "exchange"
+  : "return", === "exchange";
       document.getElementById("replacementField").hidden = !isExchange;
       document.getElementById("replacementReturnImei").required = isExchange;
       document.getElementById("differenceField").hidden = !isExchange;
