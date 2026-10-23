@@ -402,18 +402,20 @@ showMessage("Signing in...");
       scannerStarting = false;
     }
 
-    const returnTypeEl = document.getElementById("returnType");
-    function updateReturnFields() {
-      const isExchange = return_type: returnTypeEl.value.trim().toLowerCase() === "exchange"
-  ? "exchange"
-  : "return", === "exchange";
-      document.getElementById("replacementField").hidden = !isExchange;
-      document.getElementById("replacementReturnImei").required = isExchange;
-      document.getElementById("differenceField").hidden = !isExchange;
-      document.getElementById("refundField").hidden = isExchange;
-    }
-    returnTypeEl.addEventListener("change", updateReturnFields);
-    updateReturnFields();
+    
+const returnTypeEl = document.getElementById("returnType");
+
+function updateReturnFields() {
+  const isExchange = returnTypeEl.value === "exchange";
+  document.getElementById("replacementField").hidden = !isExchange;
+  document.getElementById("replacementReturnImei").required = isExchange;
+  document.getElementById("differenceField").hidden = !isExchange;
+  document.getElementById("refundField").hidden = isExchange;
+}
+
+returnTypeEl.addEventListener("change", updateReturnFields);
+updateReturnFields();
+
 
     document.getElementById("returnForm").onsubmit = async (event) => {
       event.preventDefault();
