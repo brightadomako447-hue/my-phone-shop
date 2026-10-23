@@ -69,13 +69,19 @@ z<!DOCTYPE html>
     </section>
 
     <section>
-      <h2>Search phone stock</h2>
-      <form id="searchForm">
-        <input id="search" placeholder="Search by IMEI, brand or model">
-        <button type="submit">Search</button>
-      </form>
-      <div id="stock"></div>
-    </section>
+  <h2>Search phone stock</h2>
+
+  <form id="searchForm">
+    <input id="search" placeholder="Search by IMEI, brand or model">
+    <button type="submit">Search</button>
+  </form>
+
+  <button type="button" id="toggleStock">
+    View All Stock
+  </button>
+
+  <div id="stock" style="display: none;"></div>
+</section>
 
     <section>
       <h2>Add a Dealer</h2>
@@ -520,6 +526,7 @@ async function loadDashboard() {
       }
       const { data, error } = await query;
       stock.replaceChildren();
+      stock.style.display = "block";
       if (error) { showMessage("Could not load stock: " + error.message); return; }
       if (!data || data.length === 0) { stock.textContent = "No phones found."; return; }
       data.forEach((phone) => {
@@ -539,6 +546,20 @@ async function loadDashboard() {
       event.preventDefault();
       await loadStock();
     };
+    document.getElementById("toggleStock").onclick = async () => {
+  const stock = document.getElementById("stock");
+  const button = document.getElementById("toggleStock");
+
+  if (stock.style.display === "none") {
+    stock.style.display = "block";
+    button.textContent = "Hide Stock";
+    document.getElementById("search").value = "";
+    await loadStock();
+  } else {
+    stock.style.display = "none";
+    button.textContent = "View All Stock";
+  }
+};
 
     document.getElementById("dealerForm").onsubmit = async (event) => {
       event.preventDefault();
