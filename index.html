@@ -315,7 +315,7 @@ async function loadDashboard() {
       const password = document.getElementById("password").value;
       const button = document.getElementById("signIn");
       button.disabled = true;
-      alert("Sign-in button is working");
+alert("Sign-in button is working");
 showMessage("Signing in...");
       try {
         const { error } = await db.auth.signInWithPassword({ email, password });
