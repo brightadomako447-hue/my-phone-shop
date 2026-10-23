@@ -688,9 +688,22 @@ updateReturnFields();
 
       if (userError || !user) return;
 
-      const { data: sales, error } = await db.from("shop_sales")
-        .select("id,imei,invoice_number,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
-        .order("sale_date", { ascending: false });
+     
+const { data: sales, error } = await db.from("shop_sales")
+  .select("id,imei,invoice_number,buyer_type,buyer_name,sale_price,amount_paid,sale_date,notes")
+  .order("sale_date", { ascending: false });
+
+const { data: phones, error: phonesError } = await db
+  .from("shop_phones")
+  .select("imei,brand,model");
+
+const phoneByImei = {};
+if (!phonesError && phones) {
+  phones.forEach(phone => {
+    phoneByImei[phone.imei] = phone;
+  });
+}
+
 
       if (error) {
         salesList.textContent = "Could not load sales: " + error.message;
@@ -709,7 +722,10 @@ updateReturnFields();
       sales.forEach((sale) => {
         const item = document.createElement("div");
         item.className = "phone";
-        item.textContent = "Date: " + sale.sale_date +
+        const phone = phoneByImei[sale.imei];
+item.textContent = "Phone: " +
+  (phone ? phone.brand + " " + phone.model : "Phone details unavailable") +
+  "\nDate: " + sale.sale_date
           "\nInvoice: " + sale.invoice_number +
           "\nIMEI: " + sale.imei +
           "\nBuyer: " + sale.buyer_name + " (" + sale.buyer_type + ")" +
