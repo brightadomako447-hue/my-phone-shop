@@ -754,7 +754,7 @@ if (!phonesError && phones) {
         const phone = phoneByImei[sale.imei];
 item.textContent = "Phone: " +
   (phone ? phone.brand + " " + phone.model : "Phone details unavailable") +
-  "\nDate: " + sale.sale_date
+  "\nDate: " + sale.sale_date+
           "\nInvoice: " + sale.invoice_number +
           "\nIMEI: " + sale.imei +
           "\nBuyer: " + sale.buyer_name + " (" + sale.buyer_type + ")" +
