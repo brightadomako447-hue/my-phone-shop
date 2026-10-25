@@ -118,6 +118,93 @@ button {
 .hint {
   color: #c0cee0;
 }
+
+/* SAVAGE iSTORE DASHBOARD LAYOUT */
+.luxury-dashboard {
+  padding: 20px !important;
+  background: rgba(3, 15, 35, 0.92) !important;
+  border: 1px solid #237cff !important;
+  border-radius: 22px !important;
+}
+
+.luxury-dashboard h2 {
+  font-size: 27px;
+  margin-bottom: 20px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dashboard-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px 12px;
+  border-radius: 17px;
+  color: #fff !important;
+  box-shadow: 0 6px 18px #0003;
+}
+
+.dashboard-card h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #fff !important;
+}
+
+.dashboard-card strong {
+  display: block;
+  font-size: 21px;
+  overflow-wrap: anywhere;
+  color: #fff !important;
+}
+
+.dashboard-card p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  color: #eef6ff !important;
+}
+
+.card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: #ffffff30;
+  font-size: 22px;
+}
+
+.stock-card {
+  background: linear-gradient(135deg, #0754b8, #087fe8) !important;
+}
+
+.sold-card {
+  background: linear-gradient(135deg, #00764d, #05bd80) !important;
+}
+
+.received-card {
+  background: linear-gradient(135deg, #6020bb, #a32df0) !important;
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #a64b08, #ed9419) !important;
+}
+
+.profit-card {
+  background: linear-gradient(135deg, #007c83, #08b9bd) !important;
+}
+
+@media (max-width: 380px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
   
   </style>
 </head>
@@ -135,14 +222,58 @@ button {
   </section>
 
   <div id="app" hidden>
-    <section id="dashboard">
+   
+<section id="dashboard" class="luxury-dashboard">
   <h2>Business Dashboard</h2>
-  <p>Phones in stock: <strong id="dashStock">0</strong></p>
-  <p>Phones sold: <strong id="dashSold">0</strong></p>
-  <p>Money received: <strong id="dashReceived">GHS 0.00</strong></p>
-  <p>Outstanding balances: <strong id="dashOutstanding">GHS 0.00</strong></p>
-  <p>Gross profit: <strong id="dashProfit">GHS 0.00</strong></p>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-card stock-card">
+      <span class="card-icon">📦</span>
+      <div>
+        <h3>Stock</h3>
+        <strong id="dashStock">0</strong>
+        <p>Phones in stock</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card sold-card">
+      <span class="card-icon">🛒</span>
+      <div>
+        <h3>Sold</h3>
+        <strong id="dashSold">0</strong>
+        <p>Phones sold</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card received-card">
+      <span class="card-icon">💳</span>
+      <div>
+        <h3>Money Received</h3>
+        <strong id="dashReceived">GHS 0.00</strong>
+        <p>Total received</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card balance-card">
+      <span class="card-icon">➖</span>
+      <div>
+        <h3>Outstanding Balances</h3>
+        <strong id="dashOutstanding">GHS 0.00</strong>
+        <p>Due from customers</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card profit-card">
+      <span class="card-icon">📈</span>
+      <div>
+        <h3>Gross Profit</h3>
+        <strong id="dashProfit">GHS 0.00</strong>
+        <p>Estimated profit</p>
+      </div>
+    </div>
+  </div>
 </section>
+
     <section>
       <h2>Add a phone</h2>
       <form id="phoneForm">
