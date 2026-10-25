@@ -7,6 +7,68 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
+    
+/* SAVAGE iSTORE LUXURY DESIGN */
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #071426, #102d50);
+  color: #f5f8ff;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 18px;
+}
+h1 {
+  color: #65b5ff;
+  text-align: center;
+  font-size: 30px;
+  letter-spacing: 1px;
+}
+h2 {
+  color: #65b5ff;
+}
+section {
+  background: #12243a;
+  padding: 20px;
+  margin: 18px 0;
+  border: 1px solid #294766;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px #0004;
+}
+input, select, textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  margin: 7px 0;
+  border: 1px solid #45617e;
+  border-radius: 9px;
+  background: #09182a;
+  color: white;
+}
+button {
+  background: linear-gradient(135deg, #1677e8, #45b5ff);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  margin: 6px 0;
+  font-weight: bold;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.6;
+}
+.secondary {
+  background: #354c66;
+}
+.phone {
+  border-top: 1px solid #45617e;
+  padding: 12px 0;
+}
+.hint {
+  color: #c0cee0;
+  font-size: 14px;
+}
+
     body { font-family: Arial, sans-serif; max-width: 700px; margin: 24px auto; padding: 16px; background: #f5f6f8; color: #222; }
     h1 { color: #173b67; }
     section { background: white; padding: 18px; border-radius: 12px; margin: 16px 0; }
@@ -21,22 +83,49 @@
     #reader video { width: 100% !important; height: auto !important; max-height: 62vh; object-fit: cover; border-radius: 8px; }
     #scannerPanel { scroll-margin-top: 16px; }
     .hint { color: #555; font-size: 14px; }
+  
+/* SAVAGE iSTORE FINAL LUXURY OVERRIDES */
+body {
+  background: linear-gradient(135deg, #071426, #102d50);
+  color: #f5f8ff;
+}
+h1, h2 {
+  color: #65b5ff;
+}
+section {
+  background: #12243a;
+  color: #f5f8ff;
+  border: 1px solid #294766;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px #0004;
+}
+input, select, textarea {
+  background: #09182a;
+  color: #ffffff;
+  border: 1px solid #45617e;
+  border-radius: 9px;
+}
+button {
+  background: linear-gradient(135deg, #1677e8, #45b5ff);
+  color: #ffffff;
+  border: 0;
+  border-radius: 10px;
+  font-weight: bold;
+}
+.secondary {
+  background: #354c66;
+}
+.hint {
+  color: #c0cee0;
+}
+  
   </style>
 </head>
 <body>
   <h1>Savage iStore</h1>
   <p>Phone stock · Ghana cedis (GHS)</p>
 
-  <section id="dashboard">
-  <h2>Business Dashboard</h2>
-  <p>Phones in stock: <strong id="dashStock">0</strong></p>
-  <p>Phones sold: <strong id="dashSold">0</strong></p>
-  <p>Money received: <strong id="dashReceived">GHS 0.00</strong></p>
-  <p>Outstanding balances: <strong id="dashOutstanding">GHS 0.00</strong></p>
-  <p>Gross profit: <strong id="dashProfit">GHS 0.00</strong></p>
-</section>
-
-  <section id="login">
+   <section id="login">
     <h2>Sign in</h2>
     <form id="loginForm">
       <input id="email" type="email" placeholder="Your email address" required>
