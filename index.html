@@ -543,6 +543,7 @@ body {
 
     function showMessage(text) { message.textContent = text; }
     function money(value) { return Number(value || 0).toFixed(2); }
+
 async function loadDashboard() {
   const stockResult = await db
     .from("shop_phones")
@@ -555,31 +556,68 @@ async function loadDashboard() {
 
   const salesResult = await db
     .from("shop_sales")
-    .select("sale_price,cost_at_sale,amount_paid");
+    .select("imei,sale_price,cost_at_sale,amount_paid");
 
   if (salesResult.error) {
     showMessage("Could not load dashboard sales: " + salesResult.error.message);
     return;
   }
 
+  const returnsResult = await db
+    .from("shop_returns")
+    .select("original_imei,return_type,refund_amount");
+
+  if (returnsResult.error) {
+    showMessage("Could not load return history: " + returnsResult.error.message);
+    return;
+  }
+
   const phones = stockResult.data || [];
   const sales = salesResult.data || [];
+  const returns = returnsResult.data || [];
 
-  const inStock = phones.filter(phone => phone.status === "in_stock").length;
-  const totalReceived = sales.reduce(
-    (sum, sale) => sum + Number(sale.amount_paid || 0), 0
+  const returnedImeis = new Set(
+    returns.map(r => r.original_imei)
   );
-  const totalOutstanding = sales.reduce(
-    (sum, sale) => sum + Number(sale.sale_price || 0)
-      - Number(sale.amount_paid || 0), 0
+
+  const activeSales = sales.filter(
+    sale => !returnedImeis.has(sale.imei)
   );
-  const totalProfit = sales.reduce(
-    (sum, sale) => sum + Number(sale.sale_price || 0)
-      - Number(sale.cost_at_sale || 0), 0
+
+  const inStock = phones.filter(
+    phone => phone.status === "in_stock"
+  ).length;
+
+  const totalRefunded = returns.reduce(
+    (sum, r) => sum + Number(r.refund_amount || 0), 0
+  );
+
+  const totalReceived = Math.max(
+    0,
+    sales.reduce(
+      (sum, sale) => sum + Number(sale.amount_paid || 0), 0
+    ) - totalRefunded
+  );
+
+  const totalOutstanding = activeSales.reduce(
+    (sum, sale) => sum +
+      Math.max(
+        0,
+        Number(sale.sale_price || 0) -
+        Number(sale.amount_paid || 0)
+      ),
+    0
+  );
+
+  const totalProfit = activeSales.reduce(
+    (sum, sale) => sum +
+      Number(sale.sale_price || 0) -
+      Number(sale.cost_at_sale || 0),
+    0
   );
 
   document.getElementById("dashStock").textContent = inStock;
-  document.getElementById("dashSold").textContent = sales.length;
+  document.getElementById("dashSold").textContent = activeSales.length;
   document.getElementById("dashReceived").textContent =
     "GHS " + money(totalReceived);
   document.getElementById("dashOutstanding").textContent =
@@ -587,6 +625,7 @@ async function loadDashboard() {
   document.getElementById("dashProfit").textContent =
     "GHS " + money(totalProfit);
 }
+
     async function refreshPage() {
       try {
         const { data, error } = await db.auth.getSession();
