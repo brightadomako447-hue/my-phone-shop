@@ -796,32 +796,138 @@ updateReturnFields();
       await loadReturns();
     };
 
-    async function loadReturns() {
-      const list = document.getElementById("returnsList");
-      list.replaceChildren();
-      const { data: { user }, error: userError } = await db.auth.getUser();
-      if (userError || !user) return;
-      const { data, error } = await db.from("shop_returns")
-        .select("original_imei,replacement_imei,return_type,disposition,reason,refund_amount,price_difference,return_date,notes")
-        .order("return_date", { ascending: false });
-      if (error) { list.textContent = "Could not load returns: " + error.message; return; }
-      const heading = document.createElement("h3");
-      heading.textContent = "Return & Exchange History";
-      list.appendChild(heading);
-      if (!data || data.length === 0) { list.append("No returns or exchanges recorded yet."); return; }
-      data.forEach((r) => {
-        const item = document.createElement("div");
-        item.className = "phone";
-        item.textContent = "Date: " + r.return_date + "\nType: " + r.return_type.toUpperCase() +
-          "\nOriginal IMEI: " + r.original_imei +
-          (r.replacement_imei ? "\nReplacement IMEI: " + r.replacement_imei : "") +
-          "\nReturned phone status: " + r.disposition +
-          "\nRefund: GHS " + money(r.refund_amount) +
-          (r.return_type === "exchange" ? "\nPrice difference: GHS " + money(r.price_difference) + (Number(r.price_difference) > 0 ? " (customer pays extra)" : Number(r.price_difference) < 0 ? " (refund to customer)" : "") : "") +
-          (r.reason ? "\nReason: " + r.reason : "") + (r.notes ? "\nNotes: " + r.notes : "");
-        list.appendChild(item);
-      });
+    
+async function loadReturns() {
+  const list = document.getElementById("returnsList");
+  list.replaceChildren();
+
+  const { data: { user }, error: userError } =
+    await db.auth.getUser();
+
+  if (userError || !user) return;
+
+  const { data, error } = await db.from("shop_returns")
+    .select("id,owner_id,original_imei,replacement_imei,return_type,disposition,reason,refund_amount,amount_refunded,price_difference,return_date,notes")
+    .order("return_date", { ascending: false });
+
+  if (error) {
+    list.textContent = "Could not load returns: " + error.message;
+    return;
+  }
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Return & Exchange History";
+  list.appendChild(heading);
+
+  if (!data || data.length === 0) {
+    list.append("No returns or exchanges recorded yet.");
+    return;
+  }
+
+  data.forEach((r) => {
+    const item = document.createElement("div");
+    item.className = "phone";
+
+    const details = document.createElement("div");
+    details.style.whiteSpace = "pre-wrap";
+
+    function showDetails() {
+      details.textContent =
+        "Date: " + (r.return_date || "") +
+        "\nType: " + (r.return_type || "").toUpperCase() +
+        "\nOriginal IMEI: " + (r.original_imei || "") +
+        (r.replacement_imei
+          ? "\nReplacement IMEI: " + r.replacement_imei : "") +
+        "\nReturned phone status: " + (r.disposition || "") +
+        "\nRefund: GHS " + money(r.refund_amount) +
+        (r.return_type === "exchange"
+          ? "\nPrice difference: GHS " +
+            money(r.price_difference) +
+            (Number(r.price_difference) > 0
+              ? " (customer pays extra)"
+              : Number(r.price_difference) < 0
+                ? " (refund to customer)" : "")
+          : "") +
+        (r.reason ? "\nReason: " + r.reason : "") +
+        (r.notes ? "\nNotes: " + r.notes : "");
     }
+
+    showDetails();
+    item.appendChild(details);
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.textContent = "Edit Return";
+    editButton.style.marginTop = "12px";
+
+    editButton.addEventListener("click", async () => {
+      const refundInput = prompt(
+        "Refund amount in GHS:",
+        String(r.refund_amount ?? 0)
+      );
+
+      if (refundInput === null) return;
+
+      const refund = Number(refundInput.trim());
+
+      if (
+        refundInput.trim() === "" ||
+        !Number.isFinite(refund) ||
+        refund < 0
+      ) {
+        alert("Enter a valid refund amount of 0 or more.");
+        return;
+      }
+
+      const reasonInput = prompt(
+        "Reason for return:",
+        r.reason || ""
+      );
+
+      if (reasonInput === null) return;
+
+      const notesInput = prompt(
+        "Additional notes:",
+        r.notes || ""
+      );
+
+      if (notesInput === null) return;
+
+      editButton.disabled = true;
+      editButton.textContent = "Saving...";
+
+      const { error: updateError } = await db
+        .from("shop_returns")
+        .update({
+          refund_amount: refund,
+          amount_refunded: refund,
+          reason: reasonInput.trim() || null,
+          notes: notesInput.trim() || null
+        })
+        .eq("id", r.id)
+        .eq("owner_id", user.id);
+
+      if (updateError) {
+        alert("Could not update return: " + updateError.message);
+        editButton.disabled = false;
+        editButton.textContent = "Edit Return";
+        return;
+      }
+
+      alert("Return updated successfully.");
+
+      await loadReturns();
+
+      if (typeof loadDashboard === "function") {
+        await loadDashboard();
+      }
+    });
+
+    item.appendChild(editButton);
+    list.appendChild(item);
+  });
+}
+
 
     document.getElementById("scanPhoneImei").onclick = () => startScanner("imei");
     document.getElementById("scanSaleImei").onclick = () => startScanner("saleImei");
