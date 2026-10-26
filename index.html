@@ -1535,6 +1535,7 @@ document.getElementById("loadProfitReport").onclick = async () => {
     db.auth.onAuthStateChange(() => { setTimeout(() => { refreshPage(); }, 0); });
     refreshPage();
     
+
 async function renderDailyReport() {
   const dateInput = document.getElementById("reportDate");
   const report = document.getElementById("dailyReport");
@@ -1547,9 +1548,9 @@ async function renderDailyReport() {
 
   report.textContent = "Loading report...";
 
-  const { data: sales, error } = await db
+  const { data: salesData, error } = await db
     .from("shop_sales")
-    .select("imei, sale_price, sale_date")
+    .select("id, imei, sale_price, sale_date")
     .gte("sale_date", selectedDate)
     .lte("sale_date", selectedDate);
 
@@ -1557,6 +1558,35 @@ async function renderDailyReport() {
     report.textContent = "Could not load report: " + error.message;
     return;
   }
+
+  const { data: returnsData, error: returnsError } = await db
+    .from("shop_returns")
+    .select("sale_id, original_imei, return_type");
+
+  if (returnsError) {
+    report.textContent =
+      "Could not load return records: " + returnsError.message;
+    return;
+  }
+
+  const returnedSaleIds = new Set(
+    (returnsData || [])
+      .filter(item => item.return_type === "return")
+      .map(item => item.sale_id)
+      .filter(Boolean)
+  );
+
+  const returnedImeis = new Set(
+    (returnsData || [])
+      .filter(item => item.return_type === "return")
+      .map(item => item.original_imei)
+      .filter(Boolean)
+  );
+
+  const sales = (salesData || []).filter(sale =>
+    !returnedSaleIds.has(sale.id) &&
+    !returnedImeis.has(sale.imei)
+  );
 
   const { data: phones, error: phoneError } = await db
     .from("shop_phones")
@@ -1576,7 +1606,7 @@ async function renderDailyReport() {
   let revenue = 0;
   let profit = 0;
 
-  (sales || []).forEach(sale => {
+  sales.forEach(sale => {
     const price = Number(sale.sale_price || 0);
     const cost = costByImei[sale.imei] || 0;
 
@@ -1592,7 +1622,7 @@ async function renderDailyReport() {
 
   const details = document.createElement("p");
   details.textContent =
-    "Phones sold: " + (sales || []).length +
+    "Phones sold: " + sales.length +
     "\nRevenue: GHS " + revenue.toFixed(2) +
     "\nEstimated profit: GHS " + profit.toFixed(2);
 
@@ -1600,20 +1630,6 @@ async function renderDailyReport() {
   report.appendChild(details);
 }
 
-const reportDateInput = document.getElementById("reportDate");
-const viewReportButton = document.getElementById("viewReportButton");
-
-if (reportDateInput && viewReportButton) {
-  const today = new Date();
-  const localToday =
-    today.getFullYear() + "-" +
-    String(today.getMonth() + 1).padStart(2, "0") + "-" +
-    String(today.getDate()).padStart(2, "0");
-
-  reportDateInput.value = localToday;
-  viewReportButton.addEventListener("click", renderDailyReport);
-  renderDailyReport();
-}
 
   </script>
 </body>
