@@ -816,8 +816,25 @@ async function loadReturns() {
   }
 
   const heading = document.createElement("h3");
-  heading.textContent = "Return & Exchange History";
-  list.appendChild(heading);
+heading.textContent = "Return & Exchange History";
+list.appendChild(heading);
+
+const toggleButton = document.createElement("button");
+toggleButton.type = "button";
+toggleButton.textContent = "Hide All Returns";
+toggleButton.style.marginBottom = "12px";
+list.appendChild(toggleButton);
+
+const historyContainer = document.createElement("div");
+list.appendChild(historyContainer);
+
+toggleButton.addEventListener("click", () => {
+  const isHidden = historyContainer.hidden;
+  historyContainer.hidden = !isHidden;
+  toggleButton.textContent = isHidden
+    ? "Hide All Returns"
+    : "View All Returns";
+});
 
   if (!data || data.length === 0) {
     list.append("No returns or exchanges recorded yet.");
@@ -924,7 +941,7 @@ async function loadReturns() {
     });
 
     item.appendChild(editButton);
-    list.appendChild(item);
+    historyContainer.appendChild(item);
   });
 }
 
