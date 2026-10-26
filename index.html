@@ -1458,21 +1458,40 @@ document.getElementById("paymentForm").onsubmit = async (event) => {
   await loadSales();
 };
 
+
 document.getElementById("loadProfitReport").onclick = async () => {
   const message = document.getElementById("profitReportMessage");
 
   message.textContent = "Calculating profit report...";
 
-  const { data, error } = await db
+  const { data: salesData, error: salesError } = await db
     .from("shop_sales")
-    .select("sale_price,cost_at_sale,amount_paid");
+    .select("id,sale_price,cost_at_sale,amount_paid");
 
-  if (error) {
-    message.textContent = "Could not load report: " + error.message;
+  if (salesError) {
+    message.textContent = "Could not load sales: " + salesError.message;
     return;
   }
 
-  const sales = data || [];
+  const { data: returnsData, error: returnsError } = await db
+    .from("shop_returns")
+    .select("sale_id,return_type");
+
+  if (returnsError) {
+    message.textContent = "Could not load returns: " + returnsError.message;
+    return;
+  }
+
+  const returnedSaleIds = new Set(
+    (returnsData || [])
+      .filter(item => item.return_type === "return")
+      .map(item => item.sale_id)
+      .filter(Boolean)
+  );
+
+  const sales = (salesData || []).filter(
+    sale => !returnedSaleIds.has(sale.id)
+  );
 
   const totalSales = sales.reduce(
     (sum, sale) => sum + Number(sale.sale_price || 0), 0
@@ -1509,8 +1528,9 @@ document.getElementById("loadProfitReport").onclick = async () => {
 
   message.textContent = sales.length
     ? "Profit report updated successfully."
-    : "No sales recorded yet. Figures are currently zero.";
+    : "No completed sales recorded yet. Figures are currently zero.";
 };
+
 
     db.auth.onAuthStateChange(() => { setTimeout(() => { refreshPage(); }, 0); });
     refreshPage();
