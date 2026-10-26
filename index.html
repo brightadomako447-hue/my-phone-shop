@@ -1552,7 +1552,13 @@ async function renderDailyReport() {
     .from("shop_sales")
     .select("id, imei, sale_price, sale_date")
     .gte("sale_date", selectedDate)
-    .lte("sale_date", selectedDate);
+.lt(
+  "sale_date",
+  new Date(
+    new Date(selectedDate + "T00:00:00").getTime() +
+    86400000
+  ).toISOString().slice(0, 10)
+);
 
   if (error) {
     report.textContent = "Could not load report: " + error.message;
