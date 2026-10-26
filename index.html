@@ -1630,6 +1630,24 @@ async function renderDailyReport() {
   report.appendChild(details);
 }
 
+const reportDateInput = document.getElementById("reportDate");
+const viewReportButton = document.getElementById("viewReportButton");
+
+if (reportDateInput && viewReportButton) {
+  const today = new Date();
+  const localToday =
+    today.getFullYear() + "-" +
+    String(today.getMonth() + 1).padStart(2, "0") + "-" +
+    String(today.getDate()).padStart(2, "0");
+
+  if (!reportDateInput.value) {
+    reportDateInput.value = localToday;
+  }
+
+  viewReportButton.onclick = renderDailyReport;
+  renderDailyReport();
+}
+
 
   </script>
 </body>
