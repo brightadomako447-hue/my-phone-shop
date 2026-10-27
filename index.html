@@ -1324,6 +1324,50 @@ item.textContent = "Phone: " +
         };
 
         item.appendChild(invoiceButton);
+        
+        const undoSaleButton = document.createElement("button");
+        undoSaleButton.type = "button";
+        undoSaleButton.textContent = "Undo Sale";
+
+        undoSaleButton.onclick = async () => {
+          const reason = prompt(
+            "Why are you undoing invoice " + sale.invoice_number + "?\n" +
+            "Example: Wrong sale or sale entered by mistake."
+          );
+
+          if (reason === null) return;
+
+          if (!confirm(
+            "WARNING: This will cancel invoice " + sale.invoice_number +
+            " and return IMEI " + sale.imei + " to stock.\n\n" +
+            "Only continue if you are sure."
+          )) return;
+
+          const { data, error } = await db.rpc("undo_shop_sale", {
+            p_invoice_number: sale.invoice_number,
+            p_reason: reason.trim() || "Sale undone by owner"
+          });
+
+          if (error) {
+            alert("Sale was not undone:\n" + error.message);
+            return;
+          }
+
+          alert(
+            "Sale cancelled successfully!\n" +
+            "Invoice: " + data.invoice_number +
+            "\nIMEI: " + data.imei +
+            "\nPhone is back in stock."
+          );
+
+          await loadStock();
+          await loadSales();
+          await loadDashboard();
+          await loadProfitReport();
+        };
+
+        item.appendChild(undoSaleButton);
+
         salesList.appendChild(item);
       });
     }
