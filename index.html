@@ -1575,24 +1575,18 @@ async function renderDailyReport() {
     return;
   }
 
-  const returnedSaleIds = new Set(
-    (returnsData || [])
-      .filter(item => item.return_type === "return")
-      .map(item => item.sale_id)
-      .filter(Boolean)
-  );
+  
+const returnedSaleIds = new Set(
+  (returnsData || [])
+    .filter(item => item.return_type === "return")
+    .map(item => item.sale_id)
+    .filter(Boolean)
+);
 
-  const returnedImeis = new Set(
-    (returnsData || [])
-      .filter(item => item.return_type === "return")
-      .map(item => item.original_imei)
-      .filter(Boolean)
-  );
+const sales = (salesData || []).filter(sale =>
+  !returnedSaleIds.has(sale.id)
+);
 
-  const sales = (salesData || []).filter(sale =>
-    !returnedSaleIds.has(sale.id) &&
-    !returnedImeis.has(sale.imei)
-  );
 
   const { data: phones, error: phoneError } = await db
     .from("shop_phones")
