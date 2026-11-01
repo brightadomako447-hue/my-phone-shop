@@ -414,7 +414,7 @@ body {
       <h2>Record a Sale</h2>
       <form id="saleForm">
         <input id="saleImei" placeholder="Phone IMEI" inputmode="numeric" maxlength="15" required>
-        <button class="secondary" id="scanSaleImei" type="button">Scan IMEI with camera</button>
+        
         <label for="buyerType">Buyer type</label>
         <select id="buyerType" required>
           <option value="Dealer">Dealer</option>
@@ -510,10 +510,26 @@ body {
           <option value="return">Return / refund</option>
           <option value="exchange">Exchange for another phone</option>
         </select>
-        <input id="originalReturnImei" placeholder="Original sold phone IMEI" inputmode="numeric" maxlength="15" required>
-        <div id="replacementField" hidden>
-          <input id="replacementReturnImei" placeholder="Replacement phone IMEI" inputmode="numeric" maxlength="15">
-        </div>
+        <label for="originalReturnImei">Original 7-digit Stock Code</label>
+<input
+  id="originalReturnImei"
+  placeholder="Enter original phone stock code"
+  inputmode="numeric"
+  maxlength="7"
+  pattern="[0-9]{7}"
+  required
+>
+
+<div id="replacementField" hidden>
+  <label for="replacementReturnImei">Replacement 7-digit Stock Code</label>
+  <input
+    id="replacementReturnImei"
+    placeholder="Enter replacement phone stock code"
+    inputmode="numeric"
+    maxlength="7"
+    pattern="[0-9]{7}"
+  >
+</div>
         <label for="returnDisposition">What happens to the returned phone?</label>
         <select id="returnDisposition" required>
           <option value="in_stock">Return it to stock</option>
@@ -525,10 +541,7 @@ body {
         </div>
         <div id="differenceField" hidden>
           <input id="exchangeDifference" type="number" step="0.01" value="0" placeholder="Price difference (GHS): + customer pays, - refund">
-          <p class="hint">
-  Choose your own unique 7-digit stock code and give it to your dealer.
-  The full 15-digit IMEI is optional.
-</p>
+          
         </div>
         <input id="returnNotes" placeholder="Additional notes (optional)">
         <button type="submit">Save Return / Exchange</button>
@@ -779,44 +792,84 @@ updateReturnFields();
 
 
     document.getElementById("returnForm").onsubmit = async (event) => {
-      event.preventDefault();
-      const out = document.getElementById("returnMessage");
-      const { data: { user }, error: userError } = await db.auth.getUser();
-      if (userError || !user) { out.textContent = "Please sign in again."; return; }
-      const original = document.getElementById("originalReturnImei").value.trim();
-      const type = returnTypeEl.value;
-      const replacement = document.getElementById("replacementReturnImei").value.trim();
-      const disposition = document.getElementById("returnDisposition").value;
-      const refund = Number(document.getElementById("refundAmount").value || 0);
-      const difference = Number(document.getElementById("exchangeDifference").value || 0);
-      if (!/^\d{15}$/.test(original)) { out.textContent = "Enter the original phone's 15-digit IMEI."; return; }
-      if (type === "exchange" && !/^\d{15}$/.test(replacement)) { out.textContent = "Enter the replacement phone's 15-digit IMEI."; return; }
-      if (refund < 0) { out.textContent = "Refund amount cannot be negative."; return; }
-      if (type === "refund" && !confirm("Confirm this return and refund of GHS " + money(refund) + "? The original phone status will change.")) return;
-      if (type === "exchange" && !confirm("Confirm exchange from IMEI " + original + " to " + replacement + "? The original phone status will change and the replacement will be marked sold.")) return;
-      out.textContent = "Saving return / exchange...";
-      const { data, error } = await db.rpc("process_shop_return", {
-        p_original_imei: original,
-        p_return_type: type,
-        p_disposition: disposition,
-        p_replacement_imei: type === "exchange" ? replacement : null,
-        p_reason: document.getElementById("returnReason").value.trim() || null,
-        p_refund_amount: type === "refund" ? refund : 0,
-        p_price_difference: type === "exchange" ? difference : 0,
-        p_notes: document.getElementById("returnNotes").value.trim() || null
-      });
-      if (error) { out.textContent = "Could not save return / exchange: " + error.message; return; }
-      event.target.reset();
-      document.getElementById("refundAmount").value = "0";
-      document.getElementById("exchangeDifference").value = "0";
-      updateReturnFields();
-      out.textContent = type === "exchange"
-        ? "Exchange saved. Original IMEI: " + original + "; replacement IMEI: " + replacement + ". Price difference recorded as GHS " + money(difference) + (difference > 0 ? " owed by customer." : difference < 0 ? " to refund to customer." : ". No price difference.")
-        : "Return saved. Refund recorded: GHS " + money(refund) + ". Returned phone status: " + disposition + ".";
-      await loadStock();
-      await loadSales();
-      await loadReturns();
-    };
+  event.preventDefault();
+
+  const out = document.getElementById("returnMessage");
+
+  const { data: { user }, error: userError } = await db.auth.getUser();
+  if (userError || !user) {
+    out.textContent = "Please sign in again.";
+    return;
+  }
+
+  const original = document.getElementById("originalReturnImei").value.trim();
+  const type = returnTypeEl.value;
+  const replacement = document.getElementById("replacementReturnImei").value.trim();
+  const disposition = document.getElementById("returnDisposition").value;
+  const refund = Number(document.getElementById("refundAmount").value || 0);
+  const difference = Number(document.getElementById("exchangeDifference").value || 0);
+
+  if (!/^\d{7}$/.test(original)) {
+    out.textContent = "Enter the original phone's 7-digit stock code.";
+    return;
+  }
+
+  if (type === "exchange" && !/^\d{7}$/.test(replacement)) {
+    out.textContent = "Enter the replacement phone's 7-digit stock code.";
+    return;
+  }
+
+  if (refund < 0) {
+    out.textContent = "Refund amount cannot be negative.";
+    return;
+  }
+
+  if (type === "return" && !confirm(
+    "Confirm return and refund of GHS " + money(refund) +
+    "? The original phone status will change."
+  )) return;
+
+  if (type === "exchange" && !confirm(
+    "Confirm exchange from stock code " + original +
+    " to " + replacement +
+    "? The original phone status will change and the replacement will be marked sold."
+  )) return;
+
+  out.textContent = "Saving return / exchange...";
+
+  const { data, error } = await db.rpc("process_shop_return", {
+    p_original_imei: original,
+    p_return_type: type,
+    p_disposition: disposition,
+    p_replacement_imei: type === "exchange" ? replacement : null,
+    p_reason: document.getElementById("returnReason").value.trim() || null,
+    p_refund_amount: type === "return" ? refund : 0,
+    p_price_difference: type === "exchange" ? difference : 0,
+    p_notes: document.getElementById("returnNotes").value.trim() || null
+  });
+
+  if (error) {
+    out.textContent = "Could not save return / exchange: " + error.message;
+    return;
+  }
+
+  event.target.reset();
+  document.getElementById("refundAmount").value = "0";
+  document.getElementById("exchangeDifference").value = "0";
+  updateReturnFields();
+
+  out.textContent = type === "exchange"
+    ? "Exchange saved. Original stock code: " + original +
+      "; replacement stock code: " + replacement +
+      ". Price difference: GHS " + money(difference)
+    : "Return saved. Refund recorded: GHS " + money(refund) +
+      ". Returned phone status: " + disposition + ".";
+
+  await loadStock();
+  await loadSales();
+  await loadReturns();
+  await loadDashboard();
+};
 
     
 async function loadReturns() {
@@ -1124,36 +1177,61 @@ toggleButton.addEventListener("click", () => {
     }
 
     document.getElementById("saleForm").onsubmit = async (event) => {
-      event.preventDefault();
-      const { data: { user }, error: userError } = await db.auth.getUser();
-      if (userError || !user) { saleMessage.textContent = "Please sign in again."; return; }
-      const imei = document.getElementById("saleImei").value.trim();
-      const buyerType = document.getElementById("buyerType").value;
-      const buyerName = document.getElementById("buyerName").value.trim();
-      const salePrice = Number(document.getElementById("salePrice").value);
-      const amountPaid = Number(document.getElementById("amountPaid").value);
-      const saleDate = document.getElementById("saleDate").value;
-      const notes = document.getElementById("saleNotes").value.trim();
-      if (!/^\d{15}$/.test(imei)) { saleMessage.textContent = "Please enter or scan a 15-digit IMEI."; return; }
-      if (amountPaid > salePrice) { saleMessage.textContent = "Amount paid cannot be greater than the selling price."; return; }
-      if (salePrice < 0 || amountPaid < 0) { saleMessage.textContent = "Amounts cannot be negative."; return; }
+  event.preventDefault();
 
-      saleMessage.textContent = "Recording sale...";
-      const { error } = await db.rpc("record_shop_sale", {
-        p_imei: imei,
-        p_buyer_type: buyerType,
-        p_buyer_name: buyerName,
-        p_sale_price: salePrice,
-        p_amount_paid: amountPaid,
-        p_sale_date: saleDate,
-        p_notes: notes || null
-      });
-      if (error) { saleMessage.textContent = "Could not record sale: " + error.message; return; }
-      event.target.reset();
-      saleMessage.textContent = "Sale saved! Phone marked as sold. Balance due: GHS " + money(salePrice - amountPaid);
-      await loadStock();
-      await loadSales();
-    };
+  const { data: { user }, error: userError } = await db.auth.getUser();
+  if (userError || !user) {
+    saleMessage.textContent = "Please sign in again.";
+    return;
+  }
+
+  const imei = document.getElementById("saleImei").value.trim();
+  const buyerType = document.getElementById("buyerType").value;
+  const buyerName = document.getElementById("buyerName").value.trim();
+  const salePrice = Number(document.getElementById("salePrice").value);
+  const amountPaid = Number(document.getElementById("amountPaid").value);
+  const saleDate = document.getElementById("saleDate").value;
+  const notes = document.getElementById("saleNotes").value.trim();
+
+  if (!/^\d{7}$/.test(imei)) {
+    saleMessage.textContent = "Please enter the 7-digit stock code.";
+    return;
+  }
+
+  if (amountPaid > salePrice) {
+    saleMessage.textContent = "Amount paid cannot be greater than the selling price.";
+    return;
+  }
+
+  if (salePrice < 0 || amountPaid < 0) {
+    saleMessage.textContent = "Amounts cannot be negative.";
+    return;
+  }
+
+  saleMessage.textContent = "Recording sale...";
+
+  const { error } = await db.rpc("record_shop_sale", {
+    p_imei: imei,
+    p_buyer_type: buyerType,
+    p_buyer_name: buyerName,
+    p_sale_price: salePrice,
+    p_amount_paid: amountPaid,
+    p_sale_date: saleDate,
+    p_notes: notes || null
+  });
+
+  if (error) {
+    saleMessage.textContent = "Could not record sale: " + error.message;
+    return;
+  }
+
+  event.target.reset();
+  saleMessage.textContent = "Sale saved! Phone marked as sold. Balance due: GHS " + money(salePrice - amountPaid);
+
+  await loadStock();
+  await loadSales();
+  await loadDashboard();
+};
 
     
     const escapeHTML = (value) =>
