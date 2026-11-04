@@ -328,33 +328,23 @@ button:disabled {
 
 <section id="quickActions" class="luxury-dashboard">
   <h2>Welcome to Savage iStore</h2>
-  <p class="hint">Manage your phone sales easily.</p>
+  <p class="hint">What would you like to do?</p>
 
   <div class="dashboard-grid">
-    <button type="button" onclick="document.getElementById('saleForm').scrollIntoView({behavior:'smooth'})">
+    <button type="button"
+      onclick="document.getElementById('saleForm').scrollIntoView({behavior:'smooth'})">
       🛒 Normal Sale
     </button>
 
-    <button type="button" onclick="document.getElementById('installmentsSection').scrollIntoView({behavior:'smooth'})">
+    <button type="button"
+      onclick="document.getElementById('installmentsSection').scrollIntoView({behavior:'smooth'})">
       📅 Installment Sale
     </button>
 
-    <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('quickActions').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
-      📋 Sales History
+    <button type="button"
+      onclick="document.getElementById('quickActions').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+      ☰ More
     </button>
-
-    <button type="button" onclick="document.getElementById('quickActions').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
-  ☰ More
-</button>
-  </div>
-</section>
-
-
-<section id="recentActivity" class="luxury-dashboard">
-  <h2>Recent Activity</h2>
-  <p>Your latest shop activity will appear here.</p>
-  <div id="recentActivityList">
-    <p>No recent activity to display yet.</p>
   </div>
 </section>
 
