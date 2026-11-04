@@ -328,13 +328,13 @@ body {
       📅 Installment Sale
     </button>
 
-    <button type="button" onclick="document.getElementById('salesList').scrollIntoView({behavior:'smooth'})">
+    <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('quickActions').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
       📋 Sales History
     </button>
 
-    <button type="button" onclick="document.getElementById('moreSection').scrollIntoView({behavior:'smooth'})">
-      ☰ More
-    </button>
+    <button type="button" onclick="document.getElementById('quickActions').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ☰ More
+</button>
   </div>
 </section>
 
