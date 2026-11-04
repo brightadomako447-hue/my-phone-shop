@@ -314,15 +314,30 @@ body {
   </div>
 </section>
 
+
 <section id="quickActions" class="luxury-dashboard">
-  <h2>Quick Actions</h2>
+  <h2>Welcome to Savage iStore</h2>
+  <p class="hint">Manage your phone sales easily.</p>
+
   <div class="dashboard-grid">
-    <button type="button" onclick="document.getElementById('saleForm').scrollIntoView({behavior:'smooth'})">🛒 Record Sale</button>
-    <button type="button" onclick="document.getElementById('search').scrollIntoView({behavior:'smooth'})">🔍 Search Stock</button>
-    <button type="button" onclick="document.getElementById('dealerName').scrollIntoView({behavior:'smooth'})">🤝 Add Dealer</button>
-    <button type="button" onclick="document.getElementById('customerName').scrollIntoView({behavior:'smooth'})">👤 Add Customer</button>
+    <button type="button" onclick="document.getElementById('saleForm').scrollIntoView({behavior:'smooth'})">
+      🛒 Normal Sale
+    </button>
+
+    <button type="button" onclick="document.getElementById('installmentsSection').scrollIntoView({behavior:'smooth'})">
+      📅 Installment Sale
+    </button>
+
+    <button type="button" onclick="document.getElementById('salesList').scrollIntoView({behavior:'smooth'})">
+      📋 Sales History
+    </button>
+
+    <button type="button" onclick="document.getElementById('moreSection').scrollIntoView({behavior:'smooth'})">
+      ☰ More
+    </button>
   </div>
 </section>
+
 
 <section id="recentActivity" class="luxury-dashboard">
   <h2>Recent Activity</h2>
