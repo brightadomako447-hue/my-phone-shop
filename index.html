@@ -337,7 +337,7 @@ button:disabled {
     </button>
 
     <button type="button"
-      onclick="document.getElementById('installmentsSection').scrollIntoView({behavior:'smooth'})">
+      onclick="document.getElementById('quickActions').hidden=true; document.getElementById('installmentsSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});"
       📅 Installment Sale
     </button>
 
