@@ -349,7 +349,7 @@ button:disabled {
 </section>
 
 
-    <section>
+    <section hidden>
       <h2>Add a phone</h2>
       <form id="phoneForm">
         <label for="imei">7-digit Stock Code (choose manually)</label>
@@ -383,7 +383,7 @@ button:disabled {
     </section>
 
     <section>
-  <h2>Search phone stock</h2>
+  <section id="stockSection" hidden>
 
   <form id="searchForm">
     <input id="search" placeholder="Search by IMEI, brand or model">
@@ -571,9 +571,9 @@ button:disabled {
   <h2>☰ More</h2>
   <p class="hint">Other Savage iStore features.</p>
 
-  <button type="button" onclick="document.getElementById('quickActions').scrollIntoView({behavior:'smooth'})">
-    ← Back to Home
-  </button>
+  <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('quickActions').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to Home
+</button>
 
   <div class="dashboard-grid">
     <button type="button" onclick="document.getElementById('dealerForm').scrollIntoView({behavior:'smooth'})">🤝 Dealers</button>
