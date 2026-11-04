@@ -418,6 +418,10 @@ button:disabled {
     </section>
 
     <section id="saleSection" hidden>
+      <h2>Record a Sale</h2>
+<button type="button" onclick="document.getElementById('saleSection').hidden=true; document.getElementById('quickActions').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to Home
+</button>
       <form id="saleForm">
         <input id="saleImei" placeholder="Phone IMEI" inputmode="numeric" maxlength="15" required>
         
