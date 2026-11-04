@@ -6,136 +6,129 @@
   <title>Savage iStore</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <style>
-    
-/* SAVAGE iSTORE LUXURY DESIGN */
+  
+<style>
+/* SAVAGE iSTORE — PURE BLACK DESIGN */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: #000000;
+}
+
 body {
   font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #071426, #102d50);
-  color: #f5f8ff;
+  background: #000000;
+  color: #ffffff;
   max-width: 760px;
   margin: 0 auto;
-  padding: 18px;
+  padding: 16px 14px 110px;
 }
+
 h1 {
-  color: #65b5ff;
+  color: #ffffff;
   text-align: center;
-  font-size: 30px;
-  letter-spacing: 1px;
+  font-size: 29px;
+  letter-spacing: 2px;
 }
-h2 {
-  color: #65b5ff;
+
+h2, h3 {
+  color: #ffffff;
 }
+
+p, label, small {
+  color: #dddddd;
+}
+
 section {
-  background: #12243a;
-  padding: 20px;
-  margin: 18px 0;
-  border: 1px solid #294766;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px #0004;
+  background: #080808;
+  color: #ffffff;
+  padding: 18px;
+  margin: 16px 0;
+  border: 1px solid #292929;
+  border-radius: 15px;
+  box-shadow: none;
 }
+
 input, select, textarea {
-  box-sizing: border-box;
   width: 100%;
-  padding: 12px;
-  margin: 7px 0;
-  border: 1px solid #45617e;
-  border-radius: 9px;
-  background: #09182a;
-  color: white;
-}
-button {
-  background: linear-gradient(135deg, #1677e8, #45b5ff);
-  color: white;
-  border: none;
-  border-radius: 10px;
   padding: 13px;
+  margin: 7px 0;
+  background: #111111;
+  color: #ffffff;
+  border: 1px solid #383838;
+  border-radius: 9px;
+  font-size: 16px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #888888;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #ffffff;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
   margin: 6px 0;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
 }
+
+button:active {
+  background: #cccccc;
+}
+
 button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
 }
+
 .secondary {
-  background: #354c66;
+  background: #171717;
+  color: #ffffff;
+  border: 1px solid #444444;
 }
-.phone {
-  border-top: 1px solid #45617e;
-  padding: 12px 0;
-}
+
 .hint {
-  color: #c0cee0;
+  color: #999999;
   font-size: 14px;
 }
 
-    body { font-family: Arial, sans-serif; max-width: 700px; margin: 24px auto; padding: 16px; background: #f5f6f8; color: #222; }
-    h1 { color: #173b67; }
-    section { background: white; padding: 18px; border-radius: 12px; margin: 16px 0; }
-    input, button, select { box-sizing: border-box; width: 100%; padding: 12px; margin: 7px 0; font-size: 16px; }
-    button { background: #173b67; color: white; border: 0; border-radius: 7px; }
-    button:disabled { opacity: .6; }
-    .secondary { background: #536579; }
-    .phone { border-top: 1px solid #ddd; padding: 12px 0; overflow-wrap: anywhere; }
-    #message, #saleMessage, #scannerMessage { white-space: pre-wrap; }
-    #scannerPanel { display: none; background: #eef3f8; border-radius: 10px; padding: 12px; margin: 8px 0; }
-    #reader { width: 100%; min-height: 260px; }
-    #reader video { width: 100% !important; height: auto !important; max-height: 62vh; object-fit: cover; border-radius: 8px; }
-    #scannerPanel { scroll-margin-top: 16px; }
-    .hint { color: #555; font-size: 14px; }
-  
-/* SAVAGE iSTORE FINAL LUXURY OVERRIDES */
-body {
-  background: linear-gradient(135deg, #071426, #102d50);
-  color: #f5f8ff;
-}
-h1, h2 {
-  color: #65b5ff;
-}
-section {
-  background: #12243a;
-  color: #f5f8ff;
-  border: 1px solid #294766;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px #0004;
-}
-input, select, textarea {
-  background: #09182a;
-  color: #ffffff;
-  border: 1px solid #45617e;
-  border-radius: 9px;
-}
-button {
-  background: linear-gradient(135deg, #1677e8, #45b5ff);
-  color: #ffffff;
-  border: 0;
-  border-radius: 10px;
-  font-weight: bold;
-}
-.secondary {
-  background: #354c66;
-}
-.hint {
-  color: #c0cee0;
+.phone {
+  border-top: 1px solid #333333;
+  padding: 12px 0;
+  overflow-wrap: anywhere;
 }
 
-/* SAVAGE iSTORE DASHBOARD LAYOUT */
 .luxury-dashboard {
+  background: #050505 !important;
+  border: 1px solid #303030 !important;
+  border-radius: 18px !important;
   padding: 20px !important;
-  background: rgba(3, 15, 35, 0.92) !important;
-  border: 1px solid #237cff !important;
-  border-radius: 22px !important;
 }
 
 .luxury-dashboard h2 {
-  font-size: 27px;
-  margin-bottom: 20px;
+  font-size: 25px;
 }
 
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .dashboard-card {
@@ -143,29 +136,33 @@ button {
   align-items: center;
   gap: 12px;
   min-width: 0;
-  padding: 16px 12px;
-  border-radius: 17px;
-  color: #fff !important;
-  box-shadow: 0 6px 18px #0003;
+  padding: 15px 12px;
+  border-radius: 13px;
+  background: #111111 !important;
+  color: #ffffff !important;
+  border: 1px solid #333333;
+  box-shadow: none;
+}
+
+.dashboard-card h3,
+.dashboard-card strong,
+.dashboard-card p {
+  color: #ffffff !important;
 }
 
 .dashboard-card h3 {
   margin: 0 0 8px;
   font-size: 15px;
-  color: #fff !important;
 }
 
 .dashboard-card strong {
   display: block;
   font-size: 21px;
   overflow-wrap: anywhere;
-  color: #fff !important;
 }
 
 .dashboard-card p {
-  margin: 7px 0 0;
   font-size: 12px;
-  color: #eef6ff !important;
 }
 
 .card-icon {
@@ -175,40 +172,45 @@ button {
   flex-shrink: 0;
   width: 42px;
   height: 42px;
-  border-radius: 13px;
-  background: #ffffff30;
+  border-radius: 12px;
+  background: #222222;
   font-size: 22px;
 }
 
-.stock-card {
-  background: linear-gradient(135deg, #0754b8, #087fe8) !important;
-}
-
-.sold-card {
-  background: linear-gradient(135deg, #00764d, #05bd80) !important;
-}
-
-.received-card {
-  background: linear-gradient(135deg, #6020bb, #a32df0) !important;
-}
-
-.balance-card {
-  background: linear-gradient(135deg, #a64b08, #ed9419) !important;
-}
-
+.stock-card,
+.sold-card,
+.received-card,
+.balance-card,
 .profit-card {
-  background: linear-gradient(135deg, #007c83, #08b9bd) !important;
+  background: #111111 !important;
 }
 
-@media (max-width: 380px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
+#message,
+#saleMessage,
+#scannerMessage {
+  white-space: pre-wrap;
 }
-  
-/* SAVAGE iSTORE BOTTOM NAVIGATION */
-body {
-  padding-bottom: 100px;
+
+#scannerPanel {
+  display: none;
+  background: #080808;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 8px 0;
+  scroll-margin-top: 16px;
+}
+
+#reader {
+  width: 100%;
+  min-height: 260px;
+}
+
+#reader video {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 62vh;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .bottom-nav {
@@ -222,31 +224,37 @@ body {
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
   padding: 10px 6px calc(10px + env(safe-area-inset-bottom));
-  background: #101b2b;
-  border-top: 1px solid #c5a45b;
-  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.18);
+  background: #000000;
+  border-top: 1px solid #333333;
+  box-shadow: 0 -4px 18px #000000;
   z-index: 9999;
-  box-sizing: border-box;
 }
 
 .bottom-nav button {
-  background: transparent;
-  color: #f5f0e5;
+  background: #000000;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
-  padding: 8px 2px;
+  padding: 9px 2px;
   font-size: 11px;
   font-weight: 600;
-  line-height: 1.6;
-  cursor: pointer;
 }
 
 .bottom-nav button:active {
-  background: #29384b;
-  color: #e2c477;
+  background: #222222;
 }
 
-  </style>
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 380px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 <body>
   <h1>Savage iStore</h1>
