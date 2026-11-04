@@ -332,7 +332,7 @@ button:disabled {
 
   <div class="dashboard-grid">
     <button type="button"
-      onclick="document.getElementById('saleForm').scrollIntoView({behavior:'smooth'})">
+      onclick="document.getElementById('quickActions').hidden=true; document.getElementById('saleSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});"
       🛒 Normal Sale
     </button>
 
