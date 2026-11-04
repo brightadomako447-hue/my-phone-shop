@@ -1021,14 +1021,17 @@ toggleButton.addEventListener("click", () => {
 }
 
 
-    document.getElementById("scanPhoneImei").onclick = () => startScanner("imei");
-    document.getElementById("scanSaleImei").onclick = () => startScanner("saleImei");
-    document.getElementById("stopScanner").onclick = stopScanner;
+    document.getElementById("scanPhoneImei").onclick = () => startScanner("fullImei");
+
+document.getElementById("stopScanner").onclick = stopScanner;
 
     document.getElementById("phoneForm").onsubmit = async (event) => {
       event.preventDefault();
       const imei = document.getElementById("imei").value.trim();
-      if (!/^\d{15}$/.test(imei)) { showMessage("Please enter or scan a 15-digit IMEI."); return; }
+      if (!/^\d{7}$/.test(imei)) {
+  showMessage("Please enter your chosen 7-digit stock code.");
+  return;
+}
       const { data: { user }, error: userError } = await db.auth.getUser();
       if (userError || !user) { showMessage("Please sign in again."); return; }
 
