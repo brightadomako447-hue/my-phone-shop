@@ -1905,10 +1905,11 @@ if (reportDateInput && viewReportButton) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      list.innerHTML = "<p>Could not load installment records.</p>";
-      console.error(error);
-      return;
-    }
+  list.innerHTML = "<p>Could not load installment records: " +
+    escapeInstallment(error.message) + "</p>";
+  console.error("Installment loading error:", error);
+  return;
+}
 
     if (!data || data.length === 0) {
       list.innerHTML = "<h3>Installment Records</h3><p>No installment deals recorded yet.</p>";
