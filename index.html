@@ -576,7 +576,7 @@ button:disabled {
 </button>
 
   <div class="dashboard-grid">
-    <button type="button" onclick="document.getElementById('dealerForm').scrollIntoView({behavior:'smooth'})">🤝 Dealers</button>
+    <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('dealersSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">🤝 Dealers</button>
     <button type="button" onclick="document.getElementById('customerForm').scrollIntoView({behavior:'smooth'})">👤 Customers</button>
     <button type="button" onclick="document.getElementById('returnsPanel').scrollIntoView({behavior:'smooth'})">↩️ Returns & Exchanges</button>
     <button type="button" onclick="document.getElementById('loadProfitReport').scrollIntoView({behavior:'smooth'})">📊 Profit Reports</button>
