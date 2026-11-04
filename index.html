@@ -1797,5 +1797,236 @@ if (reportDateInput && viewReportButton) {
 
 
   </script>
+  
+<section id="installmentsSection" class="luxury-dashboard">
+  <h2>📅 Installment Tracking</h2>
+  <p>Manage dealer and own-customer installment deals.</p>
+
+  <label for="installmentType">Installment Type</label>
+  <select id="installmentType">
+    <option value="dealer_customer">Dealer's Customer</option>
+    <option value="own_customer">Savage iStore's Customer</option>
+  </select>
+
+  <label for="installmentDealer">Dealer Name</label>
+  <input id="installmentDealer" placeholder="Dealer name">
+
+  <label for="installmentCustomer">Customer Name</label>
+  <input id="installmentCustomer" placeholder="Customer name">
+
+  <label for="installmentBrand">Phone Brand</label>
+  <input id="installmentBrand" placeholder="e.g. Apple">
+
+  <label for="installmentModel">Phone Model / Storage</label>
+  <input id="installmentModel" placeholder="e.g. iPhone 13 128GB" required>
+
+  <label for="installmentStockCode">7-digit Stock Code (optional)</label>
+  <input id="installmentStockCode" inputmode="numeric" maxlength="7" placeholder="Stock code">
+
+  <div id="dealerInstallmentFields">
+    <label for="dealerPayout">Amount Given to Dealer (GHS)</label>
+    <input id="dealerPayout" type="number" min="0" step="0.01" value="0">
+
+    <label>Commission Received from Dealer</label>
+    <input type="text" value="GHS 100.00 — Received immediately" disabled>
+  </div>
+
+  <div id="ownInstallmentFields" hidden>
+    <label for="installmentPhonePrice">Phone Price (GHS)</label>
+    <input id="installmentPhonePrice" type="number" min="0" step="0.01" value="0">
+
+    <label for="depositPercent">Customer Deposit</label>
+    <select id="depositPercent">
+      <option value="40">40%</option>
+      <option value="60">60%</option>
+    </select>
+
+    <label for="installmentDeposit">Actual Deposit Paid (GHS)</label>
+    <input id="installmentDeposit" type="number" min="0" step="0.01" value="0">
+
+    <label for="providerExpected">Amount Expected from Provider (GHS)</label>
+    <input id="providerExpected" type="number" min="0" step="0.01" value="0">
+
+    <label for="providerReceived">Amount Received from Provider (GHS)</label>
+    <input id="providerReceived" type="number" min="0" step="0.01" value="0">
+
+    <label>
+      <input id="contractVerified" type="checkbox">
+      Contract verified
+    </label>
+  </div>
+
+  <label for="installmentNotes">Notes</label>
+  <textarea id="installmentNotes" placeholder="Additional details"></textarea>
+
+  <button type="button" id="saveInstallment">Save Installment Deal</button>
+  <p id="installmentMessage"></p>
+
+  <div id="installmentList">
+    <h3>Installment Records</h3>
+    <p>No installment records loaded yet.</p>
+  </div>
+</section>
+
+<script>
+(function () {
+  const type = document.getElementById("installmentType");
+  const dealerFields = document.getElementById("dealerInstallmentFields");
+  const ownFields = document.getElementById("ownInstallmentFields");
+  const saveButton = document.getElementById("saveInstallment");
+  const message = document.getElementById("installmentMessage");
+  const list = document.getElementById("installmentList");
+
+  function escapeInstallment(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;",
+      '"': "&quot;", "'": "&#39;"
+    })[char]);
+  }
+
+  function updateInstallmentFields() {
+    const own = type.value === "own_customer";
+    dealerFields.hidden = own;
+    ownFields.hidden = !own;
+  }
+
+  type.addEventListener("change", updateInstallmentFields);
+  updateInstallmentFields();
+
+  async function loadInstallments() {
+    const { data: { user }, error: userError } = await db.auth.getUser();
+
+    if (userError || !user) return;
+
+    const { data, error } = await db
+      .from("shop_installments")
+      .select("*")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      list.innerHTML = "<p>Could not load installment records.</p>";
+      console.error(error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      list.innerHTML = "<h3>Installment Records</h3><p>No installment deals recorded yet.</p>";
+      return;
+    }
+
+    list.innerHTML = "<h3>Installment Records</h3>" +
+      data.map(deal => `
+        <div style="background:white;padding:12px;margin:10px 0;border-radius:10px;">
+          <b>${escapeInstallment(deal.brand)} ${escapeInstallment(deal.model)}</b>
+          <p>Type: ${deal.deal_type === "dealer_customer" ? "Dealer's Customer" : "Savage iStore Customer"}</p>
+          <p>Customer: ${escapeInstallment(deal.customer_name || "Not entered")}</p>
+          <p>Dealer: ${escapeInstallment(deal.dealer_name || "Not entered")}</p>
+          <p>Stock Code: ${escapeInstallment(deal.stock_code || "Not entered")}</p>
+          ${deal.deal_type === "dealer_customer"
+            ? `<p>Dealer payout: GHS ${Number(deal.dealer_payout).toFixed(2)}</p>
+               <p>Commission received: GHS 100.00</p>`
+            : `<p>Phone price: GHS ${Number(deal.phone_price).toFixed(2)}</p>
+               <p>Deposit: GHS ${Number(deal.deposit_amount).toFixed(2)}</p>
+               <p>Provider expected: GHS ${Number(deal.provider_amount_expected).toFixed(2)}</p>
+               <p>Provider received: GHS ${Number(deal.provider_amount_received).toFixed(2)}</p>
+               <p>Contract: ${deal.contract_verified ? "Verified" : "Not verified"}</p>`}
+          <p>Term: ${Number(deal.term_weeks)} weeks</p>
+          <p>Notes: ${escapeInstallment(deal.notes || "None")}</p>
+          <small>${new Date(deal.created_at).toLocaleString()}</small>
+        </div>
+      `).join("");
+  }
+
+  saveButton.addEventListener("click", async function () {
+    message.textContent = "Saving...";
+
+    const { data: { user }, error: userError } = await db.auth.getUser();
+
+    if (userError || !user) {
+      message.textContent = "Please sign in again.";
+      return;
+    }
+
+    const own = type.value === "own_customer";
+    const phonePrice = Number(document.getElementById("installmentPhonePrice").value || 0);
+    const deposit = Number(document.getElementById("installmentDeposit").value || 0);
+    const providerExpected = Number(document.getElementById("providerExpected").value || 0);
+    const providerReceived = Number(document.getElementById("providerReceived").value || 0);
+    const verified = document.getElementById("contractVerified").checked;
+
+    const model = document.getElementById("installmentModel").value.trim();
+
+    if (!model) {
+      message.textContent = "Please enter the phone model.";
+      return;
+    }
+
+    if (own && (phonePrice < 0 || deposit < 0 || deposit > phonePrice || providerExpected < 0 || providerReceived < 0)) {
+      message.textContent = "Please check the phone price, deposit and provider amounts.";
+      return;
+    }
+
+    const now = new Date().toISOString();
+
+    const record = {
+      owner_id: user.id,
+      deal_type: type.value,
+      dealer_name: document.getElementById("installmentDealer").value.trim() || null,
+      customer_name: document.getElementById("installmentCustomer").value.trim() || null,
+      brand: document.getElementById("installmentBrand").value.trim() || null,
+      model: model,
+      stock_code: document.getElementById("installmentStockCode").value.trim() || null,
+      phone_price: own ? phonePrice : 0,
+      dealer_payout: own ? 0 : Number(document.getElementById("dealerPayout").value || 0),
+      deposit_percent: own ? Number(document.getElementById("depositPercent").value) : null,
+      deposit_amount: own ? deposit : 0,
+      dealer_commission: own ? 0 : 100,
+      dealer_commission_received_at: own ? null : now,
+      provider_amount_expected: own ? providerExpected : 0,
+      provider_amount_received: own ? providerReceived : 0,
+      provider_paid_at: own && providerReceived > 0 ? now : null,
+      contract_verified: own ? verified : false,
+      contract_verified_at: own && verified ? now : null,
+      term_weeks: 12,
+      notes: document.getElementById("installmentNotes").value.trim() || null
+    };
+
+    const { error } = await db
+      .from("shop_installments")
+      .insert(record);
+
+    if (error) {
+      message.textContent = "Could not save: " + error.message;
+      console.error(error);
+      return;
+    }
+
+    message.textContent = "Installment deal saved successfully!";
+
+    document.getElementById("installmentDealer").value = "";
+    document.getElementById("installmentCustomer").value = "";
+    document.getElementById("installmentBrand").value = "";
+    document.getElementById("installmentModel").value = "";
+    document.getElementById("installmentStockCode").value = "";
+    document.getElementById("dealerPayout").value = "0";
+    document.getElementById("installmentPhonePrice").value = "0";
+    document.getElementById("installmentDeposit").value = "0";
+    document.getElementById("providerExpected").value = "0";
+    document.getElementById("providerReceived").value = "0";
+    document.getElementById("contractVerified").checked = false;
+    document.getElementById("installmentNotes").value = "";
+
+    await loadInstallments();
+  });
+
+  db.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) loadInstallments();
+  });
+
+  loadInstallments();
+})();
+</script>
+
 </body>
 </html>
