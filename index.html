@@ -592,7 +592,7 @@ button:disabled {
     <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('customersSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">👤 Customers</button>
     <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('returnsPanel').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">↩️ Returns & Exchanges</button>
     <button type="button" onclick="document.getElementById('loadProfitReport').scrollIntoView({behavior:'smooth'})">📊 Profit Reports</button>
-    <button type="button" onclick="document.getElementById('viewReportButton').scrollIntoView({behavior:'smooth'})">📅 Daily Reports</button>
+    <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('saleSection').hidden=false; setTimeout(()=>document.getElementById('viewReportButton').scrollIntoView({behavior:'smooth'}),100);">📅 Daily Reports</button>
     <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('saleSection').hidden=false; setTimeout(()=>document.getElementById('paymentForm').scrollIntoView({behavior:'smooth'}),100);">💳 Payments</button>
   </div>
 </section>
