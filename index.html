@@ -397,7 +397,9 @@ button:disabled {
   <div id="stock" style="display: none;"></div>
 </section>
 
-    <section id="dealersSection" hidden>
+    <button type="button" onclick="document.getElementById('dealersSection').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to More
+</button>
       <form id="dealerForm">
         <input id="dealerName" placeholder="Dealer name" required>
         <input id="dealerPhone" placeholder="Dealer phone number" required>
