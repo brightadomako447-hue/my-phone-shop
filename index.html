@@ -350,6 +350,9 @@ button:disabled {
 
 
     <section id="addPhoneSection" hidden>
+      <button type="button" onclick="document.getElementById('addPhoneSection').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to More
+</button>
       <h2>Add a phone</h2>
       <form id="phoneForm">
         <label for="imei">7-digit Stock Code (choose manually)</label>
