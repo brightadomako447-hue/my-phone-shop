@@ -272,6 +272,9 @@ button:disabled {
   <div id="app" hidden>
    
 <section id="dashboard" class="luxury-dashboard" hidden>
+  <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('dashboard').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to More
+</button>
   <h2>Business Overview</h2>
   <p class="hint">Your Savage iStore at a glance.</p>
 
