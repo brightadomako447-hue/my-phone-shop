@@ -501,6 +501,9 @@ button:disabled {
 
     </section>
 <section id="profitSection" hidden>
+  <button type="button" onclick="document.getElementById('profitSection').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to More
+</button>
   <button type="button" id="loadProfitReport">
     Generate Profit Report
   </button>
