@@ -281,6 +281,9 @@ button:disabled {
   <p class="hint">Your Savage iStore at a glance.</p>
 
   <div class="dashboard-grid">
+    <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('dashboard').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  📊 Dashboard
+</button>
     <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('stockSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">🔍 Search Phone Stock</button>
 <button type="button" onclick="document.getElementById('moreSection').hidden=true; document.getElementById('addPhoneSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">📱 Add Phone to Stock</button>
     <div class="dashboard-card stock-card">
