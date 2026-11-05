@@ -397,7 +397,8 @@ button:disabled {
   <div id="stock" style="display: none;"></div>
 </section>
 
-    <button type="button" onclick="document.getElementById('dealersSection').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+    <section id="dealersSection" hidden>
+      <button type="button" onclick="document.getElementById('dealersSection').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
   ← Back to More
 </button>
       <form id="dealerForm">
@@ -410,6 +411,9 @@ button:disabled {
     </section>
 
     <section id="customersSection" hidden>
+      <button type="button" onclick="document.getElementById('customersSection').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to More
+</button>
       <form id="customerForm">
         <input id="customerName" placeholder="Customer name" required>
         <input id="customerPhone" placeholder="Customer phone number" required>
