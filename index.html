@@ -517,6 +517,9 @@ button:disabled {
 
 
     <section id="returnsPanel" hidden>
+      <button type="button" onclick="document.getElementById('returnsPanel').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to More
+</button>
       <h2>Returns &amp; Exchanges</h2>
       <p class="hint">Only process a return after confirming the original sale. For exchanges, enter the replacement phone's IMEI; it must currently be in stock.</p>
       <form id="returnForm">
