@@ -388,7 +388,9 @@ button:disabled {
 
     <section>
   <section id="stockSection" hidden>
-
+<button type="button" onclick="document.getElementById('stockSection').hidden=true; document.getElementById('moreSection').hidden=false; window.scrollTo({top:0,behavior:'smooth'});">
+  ← Back to More
+</button>
   <form id="searchForm">
     <input id="search" placeholder="Search by IMEI, brand or model">
     <button type="submit">Search</button>
